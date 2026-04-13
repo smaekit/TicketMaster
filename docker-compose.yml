@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ticketmaster
+      POSTGRES_PASSWORD: ticketmaster
+      POSTGRES_DB: ticketmaster
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketmaster"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: ./apps/server
+    environment:
+      DATABASE_URL: postgresql://ticketmaster:ticketmaster@postgres:5432/ticketmaster
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
+      NODE_ENV: ${NODE_ENV:-development}
+      CLIENT_URL: http://localhost:5173
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./apps/client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:

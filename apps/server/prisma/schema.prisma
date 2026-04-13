@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum TicketStatus {
+  OPEN
+  RESOLVED
+  CLOSED
+}
+
+enum TicketCategory {
+  GENERAL_QUESTION
+  TECHNICAL_QUESTION
+  REFUND_REQUEST
+  UNCATEGORIZED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(AGENT)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets Ticket[]
+}
+
+model Ticket {
+  id           String         @id @default(cuid())
+  senderEmail  String
+  senderName   String?
+  subject      String
+  body         String
+  status       TicketStatus   @default(OPEN)
+  category     TicketCategory @default(UNCATEGORIZED)
+  aiSummary    String?
+  aiReply      String?
+  assignedTo   User?          @relation(fields: [assignedToId], references: [id])
+  assignedToId String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model KbArticle {
+  id        String         @id @default(cuid())
+  title     String
+  content   String
+  category  TicketCategory
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
