@@ -5,9 +5,9 @@ services:
     environment:
       POSTGRES_USER: ticketmaster
       POSTGRES_PASSWORD: ticketmaster
-      POSTGRES_DB: ticketmaster
+      POSTGRES_DB: helpdesk
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,7 +20,7 @@ services:
     build:
       context: ./apps/server
     environment:
-      DATABASE_URL: postgresql://ticketmaster:ticketmaster@postgres:5432/ticketmaster
+      DATABASE_URL: postgresql://ticketmaster:ticketmaster@postgres:5432/helpdesk
       SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
       NODE_ENV: ${NODE_ENV:-development}
       CLIENT_URL: http://localhost:5173

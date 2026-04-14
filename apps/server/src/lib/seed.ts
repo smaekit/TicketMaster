@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import { Role } from '../../generated/prisma'
 
 async function seed() {
   console.log('Seeding database...')
@@ -11,7 +12,7 @@ async function seed() {
       name: 'Admin',
       // TODO: replace with a hashed password before production
       password: 'admin123',
-      role: 'ADMIN',
+      role: Role.ADMIN,
     },
   })
 
