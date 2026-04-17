@@ -1,11 +1,10 @@
 import express from 'express'
 import cors from 'cors'
-import session from 'express-session'
-import connectPgSimple from 'connect-pg-simple'
+import { toNodeHandler } from 'better-auth/node'
+import { auth } from './lib/auth'
 import { router } from './routes'
 
 const app = express()
-const PgSession = connectPgSimple(session)
 
 app.use(
   cors({
@@ -13,26 +12,11 @@ app.use(
     credentials: true,
   })
 )
+
+app.all('/api/auth/*splat', toNodeHandler(auth))
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-
-app.use(
-  session({
-    store: new PgSession({
-      conString: process.env.DATABASE_URL,
-      tableName: 'Session',
-      createTableIfMissing: true,
-    }),
-    secret: process.env.SESSION_SECRET ?? 'dev-secret-change-in-production',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24, // 24 hours
-    },
-  })
-)
 
 app.use('/api', router)
 

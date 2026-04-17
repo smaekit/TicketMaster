@@ -1,22 +1,22 @@
+import { auth } from './auth'
 import { prisma } from './prisma'
-import { Role } from '../../generated/prisma'
 
 async function seed() {
   console.log('Seeding database...')
 
-  const admin = await prisma.user.upsert({
+  const existing = await prisma.user.findUnique({
     where: { email: 'admin@ticketmaster.local' },
-    update: {},
-    create: {
-      email: 'admin@ticketmaster.local',
-      name: 'Admin',
-      // TODO: replace with a hashed password before production
-      password: 'admin123',
-      role: Role.ADMIN,
-    },
   })
 
-  console.log(`Admin seeded: ${admin.email}`)
+  if (!existing) {
+    await auth.api.signUpEmail({
+      body: { email: 'admin@ticketmaster.local', password: 'admin123', name: 'Admin' },
+    })
+    console.log('Admin seeded: admin@ticketmaster.local')
+  } else {
+    console.log('Admin already exists, skipping.')
+  }
+
   await prisma.$disconnect()
 }
 

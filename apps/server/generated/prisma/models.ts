@@ -8,7 +8,10 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/User'
+export type * from './models/user'
+export type * from './models/session'
+export type * from './models/account'
+export type * from './models/verification'
 export type * from './models/Ticket'
 export type * from './models/KbArticle'
 export type * from './commonInputTypes'
