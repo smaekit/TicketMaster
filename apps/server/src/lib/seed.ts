@@ -2,20 +2,23 @@ import { auth } from './auth'
 import { prisma } from './prisma'
 
 async function seed() {
+  const email = process.env.SEED_ADMIN_EMAIL
+  const password = process.env.SEED_ADMIN_PASSWORD
+  if (!email || !password) {
+    throw new Error('SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set')
+  }
+
   console.log('Seeding database...')
 
-  const existing = await prisma.user.findUnique({
-    where: { email: 'admin@ticketmaster.local' },
-  })
+  const existing = await prisma.user.findUnique({ where: { email } })
 
   if (!existing) {
     await auth.api.signUpEmail({
-      body: { email: 'admin@ticketmaster.local', password: 'admin123', name: 'Admin' },
+      body: { email, password, name: 'Admin' },
     })
-    console.log('Admin seeded: admin@ticketmaster.local')
-  } else {
-    console.log('Admin already exists, skipping.')
   }
+  await prisma.user.update({ where: { email }, data: { role: 'ADMIN' } })
+  console.log(`Admin ensured: ${email}`)
 
   await prisma.$disconnect()
 }

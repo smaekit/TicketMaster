@@ -26,3 +26,11 @@ export const TicketCategory = {
 } as const
 
 export type TicketCategory = (typeof TicketCategory)[keyof typeof TicketCategory]
+
+
+export const Role = {
+  ADMIN: 'ADMIN',
+  AGENT: 'AGENT'
+} as const
+
+export type Role = (typeof Role)[keyof typeof Role]

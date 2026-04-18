@@ -20,12 +20,18 @@ enum TicketCategory {
   UNCATEGORIZED
 }
 
+enum Role {
+  ADMIN
+  AGENT
+}
+
 model user {
   id            String    @id
   name          String
   email         String    @unique
   emailVerified Boolean
   image         String?
+  role          Role      @default(AGENT)
   createdAt     DateTime
   updatedAt     DateTime
   sessions      session[]
