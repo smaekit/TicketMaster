@@ -15,6 +15,7 @@ Key libraries to always fetch docs for:
 - `express-session` — session setup, store config
 - `@anthropic-ai/sdk` — Claude API client
 - `connect-pg-simple` — PostgreSQL session store
+- `shadcn/ui` — component installation, theming
 
 ## Project Structure
 
@@ -35,11 +36,18 @@ TicketMaster/
 │   │   │       └── seed.ts      # admin seed
 │   │   └── prisma/
 │   │       └── schema.prisma
-│   └── client/          # React 19 + Vite + Tailwind + React Router 7
+│   └── client/          # React 19 + Vite + Tailwind + React Router 7 + shadcn/ui
+│       ├── components.json      # shadcn config (zinc theme, cssVariables)
 │       └── src/
 │           ├── main.tsx
 │           ├── App.tsx
-│           └── index.css
+│           ├── index.css        # Tailwind + shadcn CSS variable theme
+│           ├── components/
+│           │   └── ui/          # shadcn generated components
+│           ├── lib/
+│           │   ├── utils.ts     # cn() helper (clsx + tailwind-merge)
+│           │   └── authClient.ts
+│           └── pages/
 ├── docker-compose.yml   # postgres (5432), server (3000), client (80)
 ├── .env.example
 └── package.json         # workspace root
@@ -53,8 +61,8 @@ TicketMaster/
 | Backend | Express 5, TypeScript |
 | Database | PostgreSQL via Docker |
 | ORM | Prisma |
-| Auth | express-session + connect-pg-simple |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS, React Router 7 |
+| Auth | Better Auth (Prisma adapter, email/password) |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, React Router 7, shadcn/ui |
 | AI | Claude API (`@anthropic-ai/sdk`) |
 | Email inbound | Mailgun webhook |
 | Email outbound | SendGrid |
@@ -83,6 +91,30 @@ Copy `.env.example` to `apps/server/.env` and fill in values:
 - `MAILGUN_API_KEY` / `MAILGUN_SIGNING_KEY` / `MAILGUN_DOMAIN`
 - `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL`
 
+## Authentication (Better Auth)
+
+Auth is handled by **Better Auth** — not express-session. Update the tech stack mental model accordingly.
+
+**Server:**
+- Auth instance: `apps/server/src/lib/auth.ts` — configured with Prisma adapter, email/password only, sign-up disabled (admin-invite flow)
+- Mounted at: `app.all('/api/auth/*splat', toNodeHandler(auth))` in `app.ts`
+- Env vars required: `BETTER_AUTH_SECRET` (min 32 chars), `BETTER_AUTH_URL`, `CLIENT_URL`
+
+**Middleware (`apps/server/src/middleware/auth.ts`):**
+- `requireAuth` — validates session via `auth.api.getSession()`, attaches `res.locals.session` (includes `user.role` from Prisma)
+- `requireAdmin` — calls `requireAuth` then checks `role === 'ADMIN'`
+- Session type is augmented on `res.locals` — access as `res.locals.session.user.role`
+
+**Client:**
+- Auth client: `apps/client/src/lib/authClient.ts` — `createAuthClient()` from `better-auth/react`
+- Sign in: `authClient.signIn.email({ email, password })`
+- Session hook: `authClient.useSession()` → `{ data: session, isPending }`
+- All auth requests go to `/api/auth/*` — proxied by Vite to port 3000
+
+**Important constraints:**
+- Sign-up via `/sign-up/email` is disabled — users must be created by an admin
+- CSRF check is disabled in non-production environments
+
 ## Conventions
 
 - All API routes are under `/api` — new routes go in `apps/server/src/routes/`
@@ -90,3 +122,11 @@ Copy `.env.example` to `apps/server/.env` and fill in values:
 - Frontend fetches use `/api/...` paths — Vite proxies them to `localhost:3000` in dev
 - Prisma client is a singleton in `src/lib/prisma.ts` — always import from there
 - Session user data is typed in `src/middleware/auth.ts` via `express-session` module augmentation
+
+## UI Components (shadcn/ui)
+
+- Add components with: `bunx shadcn@latest add <component>` (run from `apps/client/`)
+- Import from `@/components/ui/<component>`
+- Use `cn()` from `@/lib/utils` for conditional class merging
+- Use semantic color tokens (`bg-background`, `text-foreground`, `text-destructive`, etc.) — never hard-code colors
+- Default theme: zinc, CSS variables, `darkMode: ['class']`
