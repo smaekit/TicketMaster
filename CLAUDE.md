@@ -33,7 +33,8 @@ TicketMaster/
 │   │   │   │   └── auth.ts      # requireAuth, requireAdmin
 │   │   │   └── lib/
 │   │   │       ├── prisma.ts    # singleton PrismaClient
-│   │   │       └── seed.ts      # admin seed
+│   │   │       ├── seed.ts      # admin seed
+│   │   │       └── create-agent.ts  # one-off agent user creation script
 │   │   └── prisma/
 │   │       └── schema.prisma
 │   └── client/          # React 19 + Vite + Tailwind + React Router 7 + shadcn/ui
@@ -106,13 +107,14 @@ Auth is handled by **Better Auth** — not express-session. Update the tech stac
 - Session type is augmented on `res.locals` — access as `res.locals.session.user.role`
 
 **Client:**
-- Auth client: `apps/client/src/lib/authClient.ts` — `createAuthClient()` from `better-auth/react`
+- Auth client: `apps/client/src/lib/authClient.ts` — `createAuthClient()` with `inferAdditionalFields<typeof auth>()` plugin from `better-auth/client/plugins`
 - Sign in: `authClient.signIn.email({ email, password })`
 - Session hook: `authClient.useSession()` → `{ data: session, isPending }`
+- `session.user.role` is fully typed — `inferAdditionalFields` syncs additional fields from the server auth instance
 - All auth requests go to `/api/auth/*` — proxied by Vite to port 3000
 
 **Important constraints:**
-- Sign-up via `/sign-up/email` is disabled — users must be created by an admin
+- Sign-up via `/sign-up/email` is disabled — users must be created via the `create-agent.ts` script or `seed.ts`
 - CSRF check is disabled in non-production environments
 
 ## Conventions

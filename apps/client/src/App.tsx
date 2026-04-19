@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import LoginPage from './pages/LoginPage'
+import UsersPage from './pages/UsersPage'
 
 function Layout() {
   return (
@@ -42,7 +44,9 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tickets" element={<div className="p-8">Ticket list</div>} />
           <Route path="/tickets/:id" element={<div className="p-8">Ticket detail</div>} />
-          <Route path="/users" element={<div className="p-8">User management</div>} />
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="/users" element={<UsersPage />} />
         </Route>
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
