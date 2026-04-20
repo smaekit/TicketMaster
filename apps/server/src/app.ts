@@ -14,14 +14,15 @@ app.use(
   })
 )
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-app.use('/api/auth', authLimiter)
+if (process.env.NODE_ENV !== 'test') {
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+  app.use('/api/auth', authLimiter)
+}
 app.all('/api/auth/*splat', toNodeHandler(auth))
 
 app.use(express.json())

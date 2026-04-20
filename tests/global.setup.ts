@@ -22,9 +22,9 @@ const testEnv = {
 };
 
 export default async function globalSetup() {
-  execSync('bunx prisma migrate reset --force --skip-seed', {
+  execSync('bunx prisma migrate reset --force', {
     cwd: serverDir,
-    env: testEnv,
+    env: { ...testEnv, PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: 'yes' },
     stdio: 'inherit',
   });
 

@@ -6,7 +6,8 @@
       "Bash(bun install:*)",
       "Bash(export PATH=\"$HOME/.bun/bin:$PATH\")",
       "Bash(bunx prisma:*)",
-      "Bash(docker exec ticketmaster-postgres-1:*)"
+      "Bash(docker exec ticketmaster-postgres-1:*)",
+      "Bash(bun test:e2e)"
     ]
   }
 }

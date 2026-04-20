@@ -1,4 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
+
+// Ensure bun is on PATH when Playwright spawns webServer child processes.
+// Windows uses USERPROFILE; Unix uses HOME.
+const home = process.env.HOME || process.env.USERPROFILE || '';
+process.env.PATH = `${path.join(home, '.bun', 'bin')}${path.delimiter}${process.env.PATH}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -18,8 +24,15 @@ export default defineConfig({
 
   projects: [
     {
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+    },
+    {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+      dependencies: ['setup'],
     },
   ],
 
@@ -27,13 +40,13 @@ export default defineConfig({
     {
       command: 'bun run dev:server:test',
       port: 3001,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 30_000,
     },
     {
       command: 'bun run dev:client:test',
       port: 5174,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 30_000,
     },
   ],
