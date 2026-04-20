@@ -19,7 +19,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return
   }
   const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } })
-  res.locals.session = { ...session, user: { ...session.user, role: user!.role } }
+  if (!user) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+  res.locals.session = { ...session, user: { ...session.user, role: user.role } }
   next()
 }
 

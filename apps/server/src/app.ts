@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './lib/auth'
 import { router } from './routes'
@@ -13,6 +14,14 @@ app.use(
   })
 )
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+app.use('/api/auth', authLimiter)
 app.all('/api/auth/*splat', toNodeHandler(auth))
 
 app.use(express.json())

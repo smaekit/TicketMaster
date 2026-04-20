@@ -1,6 +1,9 @@
 import { Router } from 'express'
+import { requireAdmin } from '../middleware/auth'
 
 const router = Router()
+
+router.use(requireAdmin)
 
 // GET /api/users
 router.get('/', async (_req, res) => {

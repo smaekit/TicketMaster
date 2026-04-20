@@ -44,11 +44,16 @@ TicketMaster/
 │           ├── App.tsx
 │           ├── index.css        # Tailwind + shadcn CSS variable theme
 │           ├── components/
-│           │   └── ui/          # shadcn generated components
+│           │   ├── ui/          # shadcn generated components
+│           │   ├── ProtectedRoute.tsx  # redirects unauthenticated to /login
+│           │   ├── AdminRoute.tsx      # redirects non-admins to /dashboard
+│           │   └── Navbar.tsx
 │           ├── lib/
 │           │   ├── utils.ts     # cn() helper (clsx + tailwind-merge)
 │           │   └── authClient.ts
 │           └── pages/
+│               ├── LoginPage.tsx
+│               └── UsersPage.tsx
 ├── docker-compose.yml   # postgres (5432), server (3000), client (80)
 ├── .env.example
 └── package.json         # workspace root
@@ -87,10 +92,23 @@ bun db:studio            # open Prisma Studio
 
 Copy `.env.example` to `apps/server/.env` and fill in values:
 - `DATABASE_URL` — PostgreSQL connection string
-- `SESSION_SECRET` — secret for express-session
+- `BETTER_AUTH_SECRET` — min 32 chars random string
+- `BETTER_AUTH_URL` — server base URL (e.g. `http://localhost:3000`)
+- `CLIENT_URL` — client base URL (e.g. `http://localhost:5173`)
 - `ANTHROPIC_API_KEY` — Claude API key
 - `MAILGUN_API_KEY` / `MAILGUN_SIGNING_KEY` / `MAILGUN_DOMAIN`
 - `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL`
+
+## User Management
+
+Users cannot self-register. Two scripts exist under `apps/server/src/lib/`:
+
+- **`seed.ts`** (`bun db:seed`) — creates/ensures the admin user via `SEED_ADMIN_EMAIL` + `SEED_ADMIN_PASSWORD` env vars
+- **`create-agent.ts`** — creates a new agent user; run with:
+  ```bash
+  cd apps/server && AGENT_EMAIL=x@y.com AGENT_PASSWORD=pass AGENT_NAME="Name" bun --env-file=.env src/lib/create-agent.ts
+  ```
+  Role defaults to `AGENT` — no extra step needed.
 
 ## Authentication (Better Auth)
 
