@@ -5,3 +5,8 @@ dist/
 *.env.local
 .DS_Store
 bun.lockb
+
+# Playwright
+playwright-report/
+test-results/
+/tests/e2e/.auth/

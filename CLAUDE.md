@@ -54,7 +54,13 @@ TicketMaster/
 │           └── pages/
 │               ├── LoginPage.tsx
 │               └── UsersPage.tsx
-├── docker-compose.yml   # postgres (5432), server (3000), client (80)
+├── playwright.config.ts # E2E test config (globalSetup, webServer)
+├── tsconfig.json        # root TS config covering tests/ and playwright.config.ts
+├── tests/
+│   ├── global.setup.ts  # migrate reset + seed test DB before every run
+│   ├── global.teardown.ts
+│   └── e2e/             # test files go here
+├── docker-compose.yml   # postgres dev (5433) + postgres_test (5434), server, client
 ├── .env.example
 └── package.json         # workspace root
 ```
@@ -142,6 +148,16 @@ Auth is handled by **Better Auth** — not express-session. Update the tech stac
 - Frontend fetches use `/api/...` paths — Vite proxies them to `localhost:3000` in dev
 - Prisma client is a singleton in `src/lib/prisma.ts` — always import from there
 - Session user data is typed in `src/middleware/auth.ts` via `express-session` module augmentation
+
+## E2E Testing
+
+Use the **`playwright-e2e-writer`** agent to write Playwright tests. Invoke it after completing any significant UI feature, page, or user flow.
+
+```
+Use the playwright-e2e-writer agent to write e2e tests for <feature>
+```
+
+The agent knows the full test setup (ports, credentials, file structure, auth patterns). Tests go in `tests/e2e/`.
 
 ## UI Components (shadcn/ui)
 

@@ -1,4 +1,21 @@
 services:
+  postgres_test:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ticketmaster
+      POSTGRES_PASSWORD: ticketmaster
+      POSTGRES_DB: helpdesk_test
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketmaster"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -41,3 +58,4 @@ services:
 
 volumes:
   postgres_data:
+  postgres_test_data:

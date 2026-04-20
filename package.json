@@ -5,10 +5,18 @@
   "scripts": {
     "dev:server": "bun run --filter @ticketmaster/server dev",
     "dev:client": "bun run --filter @ticketmaster/client dev",
+    "dev:server:test": "bun run --filter @ticketmaster/server dev:test",
+    "dev:client:test": "bun run --filter @ticketmaster/client dev:test",
     "build": "bun run --filter '*' build",
     "db:generate": "bun run --filter @ticketmaster/server db:generate",
     "db:migrate": "bun run --filter @ticketmaster/server db:migrate",
     "db:studio": "bun run --filter @ticketmaster/server db:studio",
-    "db:seed": "bun run --filter @ticketmaster/server db:seed"
+    "db:seed": "bun run --filter @ticketmaster/server db:seed",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@types/node": "^25.6.0"
   }
 }
