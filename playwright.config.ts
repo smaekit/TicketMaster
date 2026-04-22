@@ -12,7 +12,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  outputDir: './tests/test-results',
+  reporter: [['html', { outputFolder: './tests/playwright-report' }]],
 
   globalSetup: require.resolve('./tests/global.setup'),
   globalTeardown: require.resolve('./tests/global.teardown'),
@@ -38,15 +39,15 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'bun run dev:server:test',
+      command: 'bun --env-file=apps/server/.env.test apps/server/src/index.ts',
       port: 3001,
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
     {
       command: 'bun run dev:client:test',
       port: 5174,
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
   ],

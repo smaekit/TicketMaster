@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "dev:test": "sh -c 'set -a && . .env.test && set +a && exec bun --watch src/index.ts'",
+    "dev:test": "bun --env-file=.env.test src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "start": "bun dist/index.js",
     "db:generate": "prisma generate",
