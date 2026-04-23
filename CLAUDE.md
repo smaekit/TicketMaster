@@ -16,6 +16,8 @@ Key libraries to always fetch docs for:
 - `@anthropic-ai/sdk` — Claude API client
 - `connect-pg-simple` — PostgreSQL session store
 - `shadcn/ui` — component installation, theming
+- `@tanstack/react-query` — query/mutation patterns, cache invalidation
+- `axios` — HTTP client configuration
 
 ## Project Structure
 
@@ -50,6 +52,7 @@ TicketMaster/
 │           │   └── Navbar.tsx
 │           ├── lib/
 │           │   ├── utils.ts     # cn() helper (clsx + tailwind-merge)
+│           │   ├── api.ts       # shared axios instance (baseURL: /api, withCredentials)
 │           │   └── authClient.ts
 │           └── pages/
 │               ├── LoginPage.tsx
@@ -74,7 +77,7 @@ TicketMaster/
 | Database | PostgreSQL via Docker |
 | ORM | Prisma |
 | Auth | Better Auth (Prisma adapter, email/password) |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS, React Router 7, shadcn/ui |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, React Router 7, shadcn/ui, TanStack Query, Axios |
 | AI | Claude API (`@anthropic-ai/sdk`) |
 | Email inbound | Mailgun webhook |
 | Email outbound | SendGrid |
@@ -148,6 +151,14 @@ Auth is handled by **Better Auth** — not express-session. Update the tech stac
 - Frontend fetches use `/api/...` paths — Vite proxies them to `localhost:3000` in dev
 - Prisma client is a singleton in `src/lib/prisma.ts` — always import from there
 - Session user data is typed in `src/middleware/auth.ts` via `express-session` module augmentation
+
+## Data Fetching (Client)
+
+- Use **TanStack Query** (`@tanstack/react-query`) for all server state — no `useEffect`+`useState` for fetches
+- Use **Axios** via the shared instance at `apps/client/src/lib/api.ts` — never use `fetch` directly
+  - Instance has `baseURL: '/api'` and `withCredentials: true` pre-configured
+  - Axios throws on non-2xx automatically — no manual `res.ok` checks needed
+- `QueryClientProvider` is set up in `main.tsx` — all pages have access
 
 ## E2E Testing
 
