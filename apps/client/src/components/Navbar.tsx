@@ -12,7 +12,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-      <span className="font-semibold text-gray-900">TicketMaster</span>
+      <Link to="/" className="font-semibold text-gray-900 hover:text-gray-600 transition-colors">TicketMaster</Link>
       {session && (
         <div className="flex items-center gap-4">
           {session.user.role === 'ADMIN' && (

@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
 type User = {
@@ -23,6 +24,31 @@ async function fetchUsers(): Promise<User[]> {
   return data
 }
 
+function UserTableSkeleton() {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Role</TableHead>
+          <TableHead>Joined</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+            <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
 export default function UsersPage() {
   const { data: users, isPending, isError, error } = useQuery({
     queryKey: ['users'],
@@ -33,7 +59,7 @@ export default function UsersPage() {
     <div className="p-8 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Users</h1>
 
-      {isPending && <p className="text-muted-foreground">Loading...</p>}
+      {isPending && <UserTableSkeleton />}
 
       {isError && <p className="text-destructive">{error.message}</p>}
 
