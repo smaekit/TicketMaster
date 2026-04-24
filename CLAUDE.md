@@ -18,6 +18,8 @@ Key libraries to always fetch docs for:
 - `shadcn/ui` — component installation, theming
 - `@tanstack/react-query` — query/mutation patterns, cache invalidation
 - `axios` — HTTP client configuration
+- `vitest` — test configuration, mocking, assertions
+- `@testing-library/react` — render, queries, async utilities
 
 ## Project Structure
 
@@ -159,6 +161,28 @@ Auth is handled by **Better Auth** — not express-session. Update the tech stac
   - Instance has `baseURL: '/api'` and `withCredentials: true` pre-configured
   - Axios throws on non-2xx automatically — no manual `res.ok` checks needed
 - `QueryClientProvider` is set up in `main.tsx` — all pages have access
+
+## Component Testing
+
+Tests live alongside their component: `src/pages/Foo.tsx` → `src/pages/Foo.test.tsx`.
+
+**Stack:** Vitest + React Testing Library + jsdom + `@testing-library/jest-dom`
+
+**Commands** (run from `apps/client/`):
+```bash
+bun test           # run all tests once
+bun test:watch     # watch mode
+bun test:ui        # interactive browser UI (best for writing new tests)
+```
+
+**Patterns:**
+- Wrap components under test in `QueryClientProvider` with `retry: false` to prevent retries in tests
+- Mock `@/lib/api` with `vi.mock('@/lib/api', () => ({ default: { get: vi.fn() } }))` — never hit the real network
+- Use `vi.mocked(api.get).mockResolvedValue({ data: ... })` for success and `.mockRejectedValue(...)` for errors
+- Use `findBy*` queries (async) when waiting for data to load; `getBy*` for things already in the DOM
+- Use `waitFor` when asserting that something disappears or a count stabilises
+- Call `vi.clearAllMocks()` in `beforeEach`
+- Test setup file: `src/test/setup.ts` (imports `@testing-library/jest-dom`)
 
 ## E2E Testing
 
