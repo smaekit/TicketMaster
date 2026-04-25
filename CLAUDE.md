@@ -20,6 +20,7 @@ Key libraries to always fetch docs for:
 - `axios` — HTTP client configuration
 - `vitest` — test configuration, mocking, assertions
 - `@testing-library/react` — render, queries, async utilities
+- `zod` — schema definition, safeParse, error messages
 
 ## Project Structure
 
@@ -59,6 +60,9 @@ TicketMaster/
 │           └── pages/
 │               ├── LoginPage.tsx
 │               └── UsersPage.tsx
+├── packages/
+│   └── shared/          # Shared Zod schemas used by both server and client
+│       └── index.ts
 ├── playwright.config.ts # E2E test config (globalSetup, webServer)
 ├── tsconfig.json        # root TS config covering tests/ and playwright.config.ts
 ├── tests/
@@ -153,6 +157,34 @@ Auth is handled by **Better Auth** — not express-session. Update the tech stac
 - Frontend fetches use `/api/...` paths — Vite proxies them to `localhost:3000` in dev
 - Prisma client is a singleton in `src/lib/prisma.ts` — always import from there
 - Session user data is typed in `src/middleware/auth.ts` via `express-session` module augmentation
+- Use **Zod** (`zod`) for request body validation in server routes — parse with `schema.safeParse(req.body)` and return `400` with `result.error.issues[0].message` on failure
+
+## Shared Schemas (`packages/shared`)
+
+Any Zod schema used for validation on **both** the server and client must live in `packages/shared/index.ts` and be imported from `@ticketmaster/shared` in both apps. Never duplicate a schema.
+
+**Adding a new shared schema:**
+
+1. Define the schema and export its inferred type in `packages/shared/index.ts`:
+   ```ts
+   export const mySchema = z.object({ ... })
+   export type MyInput = z.infer<typeof mySchema>
+   ```
+
+2. Import in the server route:
+   ```ts
+   import { mySchema } from '@ticketmaster/shared'
+   ```
+
+3. Import in the client page/component:
+   ```ts
+   import { mySchema, type MyInput } from '@ticketmaster/shared'
+   ```
+
+**Rules:**
+- Always include `.trim()` on string fields that should be sanitized (name, password, etc.) — the shared schema is the canonical source for both client validation and server sanitization
+- `zod` is a peer dependency of `@ticketmaster/shared` — both apps supply it, no need to add it to the shared package's dependencies
+- No framework-specific code in `packages/shared` — pure Zod only
 
 ## Data Fetching (Client)
 

@@ -1,7 +1,7 @@
 {
   "name": "ticketmaster",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev:server": "bun run --filter @ticketmaster/server dev",
     "dev:client": "bun run --filter @ticketmaster/client dev",
