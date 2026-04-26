@@ -159,6 +159,20 @@ Auth is handled by **Better Auth** — not express-session. Update the tech stac
 - Session user data is typed in `src/middleware/auth.ts` via `express-session` module augmentation
 - Use **Zod** (`zod`) for request body validation in server routes — parse with `schema.safeParse(req.body)` and return `400` with `result.error.issues[0].message` on failure
 
+## Role enum (`packages/shared`)
+
+The `Role` const object and type live in `packages/shared/index.ts` and must be used everywhere a role value is referenced — never use the raw strings `'ADMIN'` or `'AGENT'`.
+
+```ts
+import { Role } from '@ticketmaster/shared'
+
+user.role === Role.ADMIN   // comparison
+user.role === Role.AGENT   // comparison
+role: Role                 // type annotation
+```
+
+`Role` is a `const` object (not a TypeScript `enum`) so the values are plain strings at runtime and tree-shakeable. `type Role` is the union `'ADMIN' | 'AGENT'` inferred from the object.
+
 ## Shared Schemas (`packages/shared`)
 
 Any Zod schema used for validation on **both** the server and client must live in `packages/shared/index.ts` and be imported from `@ticketmaster/shared` in both apps. Never duplicate a schema.

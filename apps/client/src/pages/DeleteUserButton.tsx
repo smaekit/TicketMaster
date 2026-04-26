@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
+import { Role } from '@ticketmaster/shared'
 import type { User } from './UsersTable'
 import api from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,7 @@ export function DeleteUserButton({ user }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   })
 
-  if (user.role === 'ADMIN') {
+  if (user.role === Role.ADMIN) {
     return (
       <Button variant="ghost" size="icon" disabled aria-label="Admin users cannot be deleted">
         <Trash2 className="h-4 w-4" />

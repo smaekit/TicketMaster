@@ -1,4 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom'
+import { Role } from '@ticketmaster/shared'
 import { authClient } from '../lib/authClient'
 
 export default function Navbar() {
@@ -15,7 +16,7 @@ export default function Navbar() {
       <Link to="/" className="font-semibold text-gray-900 hover:text-gray-600 transition-colors">TicketMaster</Link>
       {session && (
         <div className="flex items-center gap-4">
-          {session.user.role === 'ADMIN' && (
+          {session.user.role === Role.ADMIN && (
             <Link to="/users" className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
               Users
             </Link>

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { Role } from '@ticketmaster/shared'
 import { EditUserModal } from './EditUserModal'
 import { DeleteUserButton } from './DeleteUserButton'
 
@@ -17,7 +18,7 @@ export type User = {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'AGENT'
+  role: Role
   createdAt: string
 }
 
@@ -82,7 +83,7 @@ export function UsersTable() {
               <span
                 className={cn(
                   'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                  user.role === 'ADMIN'
+                  user.role === Role.ADMIN
                     ? 'bg-destructive/10 text-destructive'
                     : 'bg-muted text-muted-foreground'
                 )}

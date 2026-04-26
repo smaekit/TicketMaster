@@ -1,4 +1,5 @@
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react'
+import { Role } from '@ticketmaster/shared'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
@@ -11,8 +12,8 @@ vi.mock('@/lib/api', () => ({
 import api from '@/lib/api'
 
 const mockUsers = [
-  { id: '1', name: 'Alice Admin', email: 'alice@example.com', role: 'ADMIN' as const, createdAt: '2024-01-15T00:00:00.000Z' },
-  { id: '2', name: 'Bob Agent', email: 'bob@example.com', role: 'AGENT' as const, createdAt: '2024-03-20T00:00:00.000Z' },
+  { id: '1', name: 'Alice Admin', email: 'alice@example.com', role: Role.ADMIN, createdAt: '2024-01-15T00:00:00.000Z' },
+  { id: '2', name: 'Bob Agent', email: 'bob@example.com', role: Role.AGENT, createdAt: '2024-03-20T00:00:00.000Z' },
 ]
 
 function renderPage() {
@@ -73,7 +74,7 @@ describe('UsersPage', () => {
 
     await screen.findByText('Alice Admin')
     const adminRow = screen.getByText('Alice Admin').closest('tr')!
-    expect(within(adminRow).getByText('ADMIN')).toBeInTheDocument()
+    expect(within(adminRow).getByText(Role.ADMIN)).toBeInTheDocument()
   })
 
   it('renders the AGENT role badge with correct text', async () => {
@@ -82,7 +83,7 @@ describe('UsersPage', () => {
 
     await screen.findByText('Bob Agent')
     const agentRow = screen.getByText('Bob Agent').closest('tr')!
-    expect(within(agentRow).getByText('AGENT')).toBeInTheDocument()
+    expect(within(agentRow).getByText(Role.AGENT)).toBeInTheDocument()
   })
 
   it('formats the joined date', async () => {

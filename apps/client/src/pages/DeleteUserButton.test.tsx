@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
+import { Role } from '@ticketmaster/shared'
 import api from '@/lib/api'
 import { DeleteUserButton } from './DeleteUserButton'
 import type { User } from './UsersTable'
@@ -12,7 +13,7 @@ const agentUser: User = {
   id: 'user-1',
   name: 'Bob Agent',
   email: 'bob@example.com',
-  role: 'AGENT',
+  role: Role.AGENT,
   createdAt: '2024-01-01T00:00:00.000Z',
 }
 
@@ -20,7 +21,7 @@ const adminUser: User = {
   id: 'user-2',
   name: 'Alice Admin',
   email: 'alice@example.com',
-  role: 'ADMIN',
+  role: Role.ADMIN,
   createdAt: '2024-01-01T00:00:00.000Z',
 }
 
