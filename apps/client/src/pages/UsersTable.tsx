@@ -11,6 +11,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { EditUserModal } from './EditUserModal'
+import { DeleteUserButton } from './DeleteUserButton'
 
 export type User = {
   id: string
@@ -94,6 +95,7 @@ export function UsersTable() {
             </TableCell>
             <TableCell className="text-right">
               <EditUserModal user={user} />
+              <DeleteUserButton user={user} />
             </TableCell>
           </TableRow>
         ))}

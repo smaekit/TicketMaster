@@ -2,12 +2,15 @@ import type { Request, Response, NextFunction } from 'express'
 import { fromNodeHeaders } from 'better-auth/node'
 import { auth } from '../lib/auth'
 import { prisma } from '../lib/prisma'
-import type { Role } from '../../generated/prisma'
 
-declare module 'express-serve-static-core' {
-  interface Locals {
-    session: Awaited<ReturnType<typeof auth.api.getSession>> & {
-      user: { role: Role }
+type Role = 'ADMIN' | 'AGENT'
+
+declare global {
+  namespace Express {
+    interface Locals {
+      session?: Awaited<ReturnType<typeof auth.api.getSession>> & {
+        user: { role: Role }
+      }
     }
   }
 }
@@ -29,7 +32,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
 export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   await requireAuth(req, res, async () => {
-    if (res.locals.session.user.role !== 'ADMIN') {
+    if (res.locals.session!.user.role !== 'ADMIN') {
       res.status(403).json({ message: 'Forbidden' })
       return
     }

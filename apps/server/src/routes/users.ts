@@ -11,6 +11,7 @@ router.use(requireAdmin)
 // GET /api/users
 router.get('/', async (_req, res) => {
   const users = await prisma.user.findMany({
+    where: { deletedAt: null },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
     orderBy: { createdAt: 'desc' },
   })
@@ -65,8 +66,24 @@ router.patch('/:id', async (req, res) => {
 })
 
 // DELETE /api/users/:id
-router.delete('/:id', async (_req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const user = await prisma.user.findUnique({ where: { id }, select: { role: true, deletedAt: true } })
+    if (!user || user.deletedAt) {
+      res.status(404).json({ message: 'User not found' })
+      return
+    }
+    if (user.role === 'ADMIN') {
+      res.status(403).json({ message: 'Admin users cannot be deleted' })
+      return
+    }
+    await prisma.user.update({ where: { id }, data: { deletedAt: new Date() } })
+    res.json({ message: 'User deleted' })
+  } catch (err: any) {
+    const message = err?.message ?? 'Failed to delete user'
+    res.status(500).json({ message })
+  }
 })
 
 export default router
