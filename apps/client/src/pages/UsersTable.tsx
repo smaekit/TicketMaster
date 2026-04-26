@@ -10,8 +10,9 @@ import {
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { EditUserModal } from './EditUserModal'
 
-type User = {
+export type User = {
   id: string
   name: string
   email: string
@@ -33,6 +34,7 @@ function UserTableSkeleton() {
           <TableHead>Email</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Joined</TableHead>
+          <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -42,6 +44,7 @@ function UserTableSkeleton() {
             <TableCell><Skeleton className="h-4 w-48" /></TableCell>
             <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+            <TableCell />
           </TableRow>
         ))}
       </TableBody>
@@ -66,6 +69,7 @@ export function UsersTable() {
           <TableHead>Email</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Joined</TableHead>
+          <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -87,6 +91,9 @@ export function UsersTable() {
             </TableCell>
             <TableCell className="text-muted-foreground">
               {new Date(user.createdAt).toLocaleDateString()}
+            </TableCell>
+            <TableCell className="text-right">
+              <EditUserModal user={user} />
             </TableCell>
           </TableRow>
         ))}

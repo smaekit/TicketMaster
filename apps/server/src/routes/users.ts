@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { createUserSchema } from '@ticketmaster/shared'
+import { createUserSchema, editUserSchema } from '@ticketmaster/shared'
 import { requireAdmin } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { auth } from '../lib/auth'
@@ -35,8 +35,33 @@ router.post('/', async (req, res) => {
 })
 
 // PATCH /api/users/:id
-router.patch('/:id', async (_req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+router.patch('/:id', async (req, res) => {
+  const result = editUserSchema.safeParse(req.body)
+  if (!result.success) {
+    res.status(400).json({ message: result.error.issues[0].message })
+    return
+  }
+
+  const { id } = req.params
+  const { name, email, password } = result.data
+
+  try {
+    await prisma.user.update({ where: { id }, data: { name, email } })
+
+    if (password) {
+      const ctx = await auth.$context
+      const hashedPassword = await ctx.password.hash(password)
+      await prisma.account.updateMany({
+        where: { userId: id, providerId: 'credential' },
+        data: { password: hashedPassword },
+      })
+    }
+
+    res.json({ message: 'User updated' })
+  } catch (err: any) {
+    const message = err?.body?.message ?? err?.message ?? 'Failed to update user'
+    res.status(400).json({ message })
+  }
 })
 
 // DELETE /api/users/:id

@@ -7,3 +7,14 @@ export const createUserSchema = z.object({
 })
 
 export type CreateUserInput = z.infer<typeof createUserSchema>
+
+export const editUserSchema = z.object({
+  name: z.string().trim().min(3, 'Name must be at least 3 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.union([
+    z.string().trim().min(8, 'Password must be at least 8 characters'),
+    z.literal(''),
+  ]).optional(),
+})
+
+export type EditUserInput = z.infer<typeof editUserSchema>

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { createUserSchema, type CreateUserInput } from '@ticketmaster/shared'
+import { Pencil } from 'lucide-react'
+import { editUserSchema, type EditUserInput } from '@ticketmaster/shared'
+import type { User } from './UsersTable'
 import api from '@/lib/api'
 import { getErrorMessage } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -16,39 +18,56 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 
-type CreateUserFormData = CreateUserInput
+type EditUserFormData = EditUserInput
 
-export function CreateUserModal() {
+type Props = {
+  user: User
+}
+
+export function EditUserModal({ user }: Props) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
-  const form = useForm<CreateUserFormData>({ resolver: zodResolver(createUserSchema) })
+  const form = useForm<EditUserFormData>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: { name: user.name, email: user.email, password: '' },
+  })
 
   const mutation = useMutation({
-    mutationFn: (data: CreateUserFormData) => api.post('/users', data).then(r => r.data),
+    mutationFn: (data: EditUserFormData) => api.patch(`/users/${user.id}`, data).then(r => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       setOpen(false)
-      form.reset()
     },
     onError: (err: any) => {
-      form.setError('root', { message: getErrorMessage(err, 'Failed to create user') })
+      form.setError('root', { message: getErrorMessage(err, 'Failed to update user') })
     },
   })
 
+  function handleOpenChange(next: boolean) {
+    if (!next) form.reset({ name: user.name, email: user.email, password: '' })
+    setOpen(next)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button>Create User</Button>
+        <Button variant="ghost" size="icon" aria-label={`Edit ${user.name}`}>
+          <Pencil className="h-4 w-4" />
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create User</DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(data => mutation.mutate(data))} className="space-y-4" autoComplete="off" noValidate>
+        <form
+          onSubmit={form.handleSubmit(data => mutation.mutate(data))}
+          className="space-y-4"
+          noValidate
+        >
           <div className="space-y-1.5">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="edit-name">Name</Label>
             <Input
-              id="name"
+              id="edit-name"
               {...form.register('name')}
               aria-invalid={!!form.formState.errors.name}
             />
@@ -57,11 +76,10 @@ export function CreateUserModal() {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="edit-email">Email</Label>
             <Input
-              id="email"
+              id="edit-email"
               type="email"
-              autoComplete="off"
               {...form.register('email')}
               aria-invalid={!!form.formState.errors.email}
             />
@@ -70,10 +88,11 @@ export function CreateUserModal() {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="edit-password">Password</Label>
             <Input
-              id="password"
+              id="edit-password"
               type="password"
+              placeholder="Leave blank to keep current"
               autoComplete="new-password"
               {...form.register('password')}
               aria-invalid={!!form.formState.errors.password}
@@ -86,7 +105,7 @@ export function CreateUserModal() {
             <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
           )}
           <Button type="submit" disabled={mutation.isPending} className="w-full">
-            {mutation.isPending ? 'Creating…' : 'Create User'}
+            {mutation.isPending ? 'Saving…' : 'Save Changes'}
           </Button>
         </form>
       </DialogContent>
