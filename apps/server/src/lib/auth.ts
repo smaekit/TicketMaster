@@ -20,6 +20,6 @@ export const auth = betterAuth({
   disabledPaths: ['/sign-up/email'],
   trustedOrigins: [process.env.CLIENT_URL ?? 'http://localhost:5173'],
   advanced: {
-    disableCSRFCheck: process.env.NODE_ENV === 'development',
+    disableCSRFCheck: process.env.NODE_ENV !== 'production',
   },
 })
