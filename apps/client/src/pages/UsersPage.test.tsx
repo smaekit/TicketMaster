@@ -1,4 +1,5 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 import UsersPage from './UsersPage'
@@ -106,5 +107,53 @@ describe('UsersPage', () => {
 
     // Wait for skeleton to clear and data table to settle with only the header row
     await waitFor(() => expect(screen.getAllByRole('row')).toHaveLength(1))
+  })
+})
+
+describe('UsersPage — Create User dialog', () => {
+  beforeEach(() => {
+    vi.mocked(api.get).mockResolvedValue({ data: [] })
+  })
+
+  it('dialog is not shown on initial render', () => {
+    renderPage()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows dialog when Create User button is clicked', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Create User' }))
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Create User' })).toBeInTheDocument()
+  })
+
+  it('hides dialog when Escape is pressed', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Create User' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('hides dialog when clicking outside', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Create User' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+    // Radix sets pointer-events:none on body while the dialog is open, so userEvent.click
+    // would be blocked. fireEvent bypasses CSS and matches how Radix detects outside clicks
+    // (it listens for pointerdown at the document level).
+    fireEvent.pointerDown(document.body)
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })

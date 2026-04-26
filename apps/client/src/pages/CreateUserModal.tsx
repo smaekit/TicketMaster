@@ -43,7 +43,7 @@ export function CreateUserModal() {
         <DialogHeader>
           <DialogTitle>Create User</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(data => mutation.mutate(data))} className="space-y-4" autoComplete="off">
+        <form onSubmit={form.handleSubmit(data => mutation.mutate(data))} className="space-y-4" autoComplete="off" noValidate>
           <div className="space-y-1.5">
             <Label htmlFor="name">Name</Label>
             <Input
