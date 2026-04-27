@@ -3,6 +3,7 @@ import { createUserSchema, editUserSchema } from '@ticketmaster/shared'
 import { requireAdmin } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
 import { auth } from '../lib/auth'
+import { parseBody } from '../lib/validate'
 
 const router = Router()
 
@@ -20,12 +21,9 @@ router.get('/', async (_req, res) => {
 
 // POST /api/users
 router.post('/', async (req, res) => {
-  const result = createUserSchema.safeParse(req.body)
-  if (!result.success) {
-    res.status(400).json({ message: result.error.issues[0].message })
-    return
-  }
-  const { name, email, password } = result.data
+  const data = parseBody(createUserSchema, req.body, res)
+  if (!data) return
+  const { name, email, password } = data
   try {
     await auth.api.signUpEmail({ body: { name, email, password } })
     res.status(201).json({ message: 'User created' })
@@ -37,14 +35,11 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/users/:id
 router.patch('/:id', async (req, res) => {
-  const result = editUserSchema.safeParse(req.body)
-  if (!result.success) {
-    res.status(400).json({ message: result.error.issues[0].message })
-    return
-  }
+  const data = parseBody(editUserSchema, req.body, res)
+  if (!data) return
 
   const { id } = req.params
-  const { name, email, password } = result.data
+  const { name, email, password } = data
 
   try {
     await prisma.user.update({ where: { id }, data: { name, email } })

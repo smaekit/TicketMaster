@@ -9,7 +9,8 @@
       "Bash(docker exec ticketmaster-postgres-1:*)",
       "Bash(bun test:e2e)",
       "Bash(bun run *)",
-      "Bash(~/.bun/bin/bun run *)"
+      "Bash(~/.bun/bin/bun run *)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

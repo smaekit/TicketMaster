@@ -38,6 +38,7 @@ TicketMaster/
 │   │   │   │   └── auth.ts      # requireAuth, requireAdmin
 │   │   │   └── lib/
 │   │   │       ├── prisma.ts    # singleton PrismaClient
+│   │   │       ├── validate.ts  # parseBody() helper — Zod schema validation for route handlers
 │   │   │       ├── seed.ts      # admin seed
 │   │   │       └── create-agent.ts  # one-off agent user creation script
 │   │   └── prisma/
@@ -157,7 +158,15 @@ Auth is handled by **Better Auth** — not express-session. Update the tech stac
 - Frontend fetches use `/api/...` paths — Vite proxies them to `localhost:3000` in dev
 - Prisma client is a singleton in `src/lib/prisma.ts` — always import from there
 - Session user data is typed in `src/middleware/auth.ts` via `express-session` module augmentation
-- Use **Zod** (`zod`) for request body validation in server routes — parse with `schema.safeParse(req.body)` and return `400` with `result.error.issues[0].message` on failure
+- Use **Zod** (`zod`) for request body validation in server routes via the `parseBody` helper in `src/lib/validate.ts` — never call `safeParse` directly in a route handler:
+  ```ts
+  import { parseBody } from '../lib/validate'
+
+  const data = parseBody(mySchema, req.body, res)
+  if (!data) return  // response already sent as 400
+
+  // data is fully typed here
+  ```
 
 ## Role enum (`packages/shared`)
 
