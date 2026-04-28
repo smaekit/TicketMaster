@@ -25,3 +25,13 @@ export const editUserSchema = z.object({
 })
 
 export type EditUserInput = z.infer<typeof editUserSchema>
+
+export const ticketQuerySchema = z.object({
+  sortBy: z.enum(['subject', 'senderEmail', 'status', 'category', 'createdAt']).default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  status: z.enum(['OPEN', 'RESOLVED', 'CLOSED']).optional(),
+  category: z.enum(['GENERAL_QUESTION', 'TECHNICAL_QUESTION', 'REFUND_REQUEST', 'UNCATEGORIZED']).optional(),
+  search: z.string().trim().optional(),
+})
+
+export type TicketQueryParams = z.infer<typeof ticketQuerySchema>

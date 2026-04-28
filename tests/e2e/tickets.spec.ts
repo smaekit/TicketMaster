@@ -6,14 +6,20 @@
  *  2. Authenticated access
  *     - Authenticated user reaches /tickets and sees the "Tickets" heading
  *     - Tickets link is visible in the Navbar for the authenticated admin user
- *     - Clicking the Navbar Tickets link navigates to /tickets
  *  3. Webhook → UI data flow
  *     - POST a signed Mailgun webhook directly to the server, then load /tickets
  *       in the browser and assert the ticket's subject and sender email appear
  *       in the table (full-stack: webhook → DB → API → React render)
+ *  4. Server-side sorting
+ *     - Clicking a column header sends the correct sortBy / sortOrder query params
+ *       to the API and the server responds 200 (full browser → server round-trip)
+ *  5. Server-side filtering
+ *     - Selecting a status filter sends status param; typing sends search param
+ *     - Filter and sort params are combined correctly in a single request
  *
  * Unit tests already cover column headers, status badges, category labels,
- * loading/empty/error states, date formatting, and sender name/email display.
+ * loading/empty/error states, date formatting, sender name/email display, and
+ * the exact API params sent on each sort-click permutation.
  * These tests focus exclusively on behaviour that requires a real browser,
  * real server, and real database.
  */
@@ -92,6 +98,7 @@ test.describe('Tickets page — authenticated access', () => {
 // ==========================================================================
 // 3. Webhook → UI data flow
 // ==========================================================================
+
 test.describe('Tickets page — webhook to UI data flow', () => {
   test.use({ storageState: ADMIN_STORAGE_STATE });
 
@@ -119,5 +126,127 @@ test.describe('Tickets page — webhook to UI data flow', () => {
     // Sender email appears in the Sender column (no display name was provided
     // so the email is shown as the primary text, not as a sub-line).
     await expect(page.getByText(from)).toBeVisible();
+  });
+});
+
+// ==========================================================================
+// 4. Server-side sorting
+// ==========================================================================
+test.describe('Tickets page — server-side sorting', () => {
+  test.use({ storageState: ADMIN_STORAGE_STATE });
+
+  test('clicking Subject header sends sortBy=subject&sortOrder=asc to the API', async ({ page }) => {
+    await page.goto('/tickets');
+    await expect(page.getByRole('heading', { name: 'Tickets' })).toBeVisible();
+
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes('/api/tickets') && res.url().includes('sortBy=subject'),
+      ),
+      page.getByRole('button', { name: 'Subject' }).click(),
+    ]);
+
+    const url = new URL(response.url());
+    expect(url.searchParams.get('sortBy')).toBe('subject');
+    expect(url.searchParams.get('sortOrder')).toBe('asc');
+    expect(response.status()).toBe(200);
+  });
+
+  test('clicking Subject header twice sends sortOrder=desc on the second request', async ({ page }) => {
+    await page.goto('/tickets');
+    await expect(page.getByRole('heading', { name: 'Tickets' })).toBeVisible();
+
+    // First click → asc
+    await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes('/api/tickets') && res.url().includes('sortBy=subject'),
+      ),
+      page.getByRole('button', { name: 'Subject' }).click(),
+    ]);
+
+    // Second click → desc
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) =>
+          res.url().includes('/api/tickets') &&
+          res.url().includes('sortBy=subject') &&
+          res.url().includes('sortOrder=desc'),
+      ),
+      page.getByRole('button', { name: 'Subject' }).click(),
+    ]);
+
+    expect(response.status()).toBe(200);
+    const url = new URL(response.url());
+    expect(url.searchParams.get('sortOrder')).toBe('desc');
+  });
+});
+
+// ==========================================================================
+// 5. Server-side filtering
+// ==========================================================================
+test.describe('Tickets page — server-side filtering', () => {
+  test.use({ storageState: ADMIN_STORAGE_STATE });
+
+  test('selecting a status filter sends status param to the API', async ({ page }) => {
+    await page.goto('/tickets');
+    await expect(page.getByRole('heading', { name: 'Tickets' })).toBeVisible();
+
+    // Open the Status combobox and pick "Open"
+    await page.getByRole('combobox', { name: 'All statuses' }).click();
+
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes('/api/tickets') && res.url().includes('status=OPEN'),
+      ),
+      page.getByRole('option', { name: 'Open' }).click(),
+    ]);
+
+    const url = new URL(response.url());
+    expect(url.searchParams.get('status')).toBe('OPEN');
+    expect(response.status()).toBe(200);
+  });
+
+  test('typing in the search box sends search param to the API', async ({ page }) => {
+    await page.goto('/tickets');
+    await expect(page.getByRole('heading', { name: 'Tickets' })).toBeVisible();
+
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) => res.url().includes('/api/tickets') && res.url().includes('search=refund'),
+      ),
+      page.getByPlaceholder('Search subject or sender…').fill('refund'),
+    ]);
+
+    const url = new URL(response.url());
+    expect(url.searchParams.get('search')).toBe('refund');
+    expect(response.status()).toBe(200);
+  });
+
+  test('filters and sort params are combined in the same request', async ({ page }) => {
+    await page.goto('/tickets');
+    await expect(page.getByRole('heading', { name: 'Tickets' })).toBeVisible();
+
+    // Apply status filter first
+    await page.getByRole('combobox', { name: 'All statuses' }).click();
+    await Promise.all([
+      page.waitForResponse((res) => res.url().includes('status=RESOLVED')),
+      page.getByRole('option', { name: 'Resolved' }).click(),
+    ]);
+
+    // Then click Subject to sort — both params should be in the request
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (res) =>
+          res.url().includes('/api/tickets') &&
+          res.url().includes('status=RESOLVED') &&
+          res.url().includes('sortBy=subject'),
+      ),
+      page.getByRole('button', { name: 'Subject' }).click(),
+    ]);
+
+    const url = new URL(response.url());
+    expect(url.searchParams.get('status')).toBe('RESOLVED');
+    expect(url.searchParams.get('sortBy')).toBe('subject');
+    expect(response.status()).toBe(200);
   });
 });

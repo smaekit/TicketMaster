@@ -1,14 +1,30 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
+import { ticketQuerySchema } from '@ticketmaster/shared'
+import { parseQuery } from '../lib/validate'
 
 const router = Router()
 
 router.use(requireAuth)
 
 // GET /api/tickets
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
+  const params = parseQuery(ticketQuerySchema, req.query, res)
+  if (!params) return
+
   const tickets = await prisma.ticket.findMany({
+    where: {
+      ...(params.status && { status: params.status }),
+      ...(params.category && { category: params.category }),
+      ...(params.search && {
+        OR: [
+          { subject: { contains: params.search, mode: 'insensitive' } },
+          { senderEmail: { contains: params.search, mode: 'insensitive' } },
+          { senderName: { contains: params.search, mode: 'insensitive' } },
+        ],
+      }),
+    },
     select: {
       id: true,
       senderEmail: true,
@@ -18,7 +34,7 @@ router.get('/', async (_req, res) => {
       category: true,
       createdAt: true,
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { [params.sortBy]: params.sortOrder },
   })
   res.json(tickets)
 })
