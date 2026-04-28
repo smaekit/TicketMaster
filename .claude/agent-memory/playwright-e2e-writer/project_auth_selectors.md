@@ -16,8 +16,14 @@ type: project
 **Navbar (`apps/client/src/components/Navbar.tsx`):**
 - Brand: `page.getByText('TicketMaster')`
 - Sign out button: `page.getByRole('button', { name: 'Sign out' })` — only visible when `session` exists
+- Tickets link (all authenticated users): `page.getByRole('link', { name: 'Tickets' })`
 - Users link (ADMIN only): `page.getByRole('link', { name: 'Users' })`
 - User name display: `page.getByText(session.user.name)` (not testid, varies by user)
+
+**Tickets page (`apps/client/src/pages/TicketsPage.tsx` + `TicketsTable.tsx`):**
+- Heading: `page.getByRole('heading', { name: 'Tickets' })`
+- Subject cell: `page.getByRole('cell', { name: subject })`
+- Sender email: `page.getByText(senderEmail)` — shown as primary text when no display name; shown as muted sub-line when display name exists
 
 **Dashboard page (`apps/client/src/App.tsx` inline `Dashboard` component):**
 - Heading: `page.getByRole('heading', { name: 'Dashboard' })`

@@ -241,13 +241,25 @@ bun test:ui        # interactive browser UI (best for writing new tests)
 
 ## E2E Testing
 
-Use the **`playwright-e2e-writer`** agent to write Playwright tests. Invoke it after completing any significant UI feature, page, or user flow.
+**Default to component tests.** E2E tests are slow and require a running stack — only write them when the behaviour cannot be verified at the component level.
 
-```
-Use the playwright-e2e-writer agent to write e2e tests for <feature>
-```
+**Write an e2e test only when ALL of the following are true:**
+- It crosses multiple real system boundaries (browser + server + DB)
+- Mocking would hide the exact integration being verified
+- No component test can cover the same confidence
 
-The agent knows the full test setup (ports, credentials, file structure, auth patterns). Tests go in `tests/e2e/`.
+**Good e2e candidates:**
+- Route protection (unauthenticated redirect) — ProtectedRoute depends on a real session
+- Full-stack data flows — e.g. webhook creates DB record → API serves it → React renders it
+- Auth flows — login, logout, session persistence
+
+**Do NOT write e2e tests for:**
+- Rendering (headings, labels, column headers) — component test
+- Loading / error / empty states — component test
+- UI logic (badge colours, date formatting, conditional links) — component test
+- Navigation (`<Link href="...">`) — component test with `MemoryRouter` + `toHaveAttribute('href', ...)`
+
+Use the **`playwright-e2e-writer`** agent when e2e tests are genuinely needed. Tests go in `tests/e2e/`. The agent knows the full test setup (ports, credentials, file structure, auth patterns).
 
 ## UI Components (shadcn/ui)
 
