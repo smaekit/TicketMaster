@@ -48,8 +48,10 @@ router.get('/', async (req, res) => {
 })
 
 // GET /api/tickets/:id
-router.get('/:id', async (_req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+router.get('/:id', async (req, res) => {
+  const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id } })
+  if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
+  res.json(ticket)
 })
 
 // PATCH /api/tickets/:id

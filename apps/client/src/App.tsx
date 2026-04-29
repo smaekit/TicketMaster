@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import LoginPage from './pages/LoginPage'
 import TicketsPage from './pages/TicketsPage'
+import TicketDetailPage from './pages/TicketDetailPage'
 import UsersPage from './pages/UsersPage'
 
 function Layout() {
@@ -44,7 +45,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tickets" element={<TicketsPage />} />
-          <Route path="/tickets/:id" element={<div className="p-8">Ticket detail</div>} />
+          <Route path="/tickets/:id" element={<TicketDetailPage />} />
         </Route>
         <Route element={<AdminRoute />}>
           <Route path="/users" element={<UsersPage />} />

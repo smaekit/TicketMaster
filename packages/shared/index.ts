@@ -26,11 +26,17 @@ export const editUserSchema = z.object({
 
 export type EditUserInput = z.infer<typeof editUserSchema>
 
+export const ticketStatusSchema = z.enum(['OPEN', 'RESOLVED', 'CLOSED'])
+export type TicketStatus = z.infer<typeof ticketStatusSchema>
+
+export const ticketCategorySchema = z.enum(['GENERAL_QUESTION', 'TECHNICAL_QUESTION', 'REFUND_REQUEST', 'UNCATEGORIZED'])
+export type TicketCategory = z.infer<typeof ticketCategorySchema>
+
 export const ticketQuerySchema = z.object({
   sortBy: z.enum(['subject', 'senderEmail', 'status', 'category', 'createdAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
-  status: z.enum(['OPEN', 'RESOLVED', 'CLOSED']).optional(),
-  category: z.enum(['GENERAL_QUESTION', 'TECHNICAL_QUESTION', 'REFUND_REQUEST', 'UNCATEGORIZED']).optional(),
+  status: ticketStatusSchema.optional(),
+  category: ticketCategorySchema.optional(),
   search: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),

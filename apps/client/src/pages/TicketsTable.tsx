@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import {
   useReactTable,
@@ -28,9 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import api from '@/lib/api'
-
-type TicketStatus = 'OPEN' | 'RESOLVED' | 'CLOSED'
-type TicketCategory = 'GENERAL_QUESTION' | 'TECHNICAL_QUESTION' | 'REFUND_REQUEST' | 'UNCATEGORIZED'
+import { type TicketStatus, type TicketCategory } from '@ticketmaster/shared'
 
 type Ticket = {
   id: string
@@ -94,7 +93,11 @@ const columns: ColumnDef<Ticket>[] = [
   {
     accessorKey: 'subject',
     header: ({ column }) => <SortableHeader column={column} label="Subject" />,
-    cell: ({ row }) => <span className="font-medium">{row.original.subject}</span>,
+    cell: ({ row }) => (
+      <Link to={`/tickets/${row.original.id}`} className="font-medium hover:underline">
+        {row.original.subject}
+      </Link>
+    ),
   },
   {
     accessorKey: 'senderEmail',
