@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,7 +8,7 @@ import {
   type SortingState,
   type Column,
 } from '@tanstack/react-table'
-import { ArrowUp, ArrowDown, ArrowUpDown, X } from 'lucide-react'
+import { ArrowUp, ArrowDown, ArrowUpDown, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -41,6 +41,13 @@ type Ticket = {
   category: TicketCategory
   createdAt: string
 }
+
+type TicketsResponse = {
+  data: Ticket[]
+  total: number
+}
+
+const PAGE_SIZE = 10
 
 const STATUS_STYLES: Record<TicketStatus, string> = {
   OPEN: 'bg-blue-100 text-blue-700',
@@ -132,9 +139,14 @@ export default function TicketsTable() {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
+  // Debounce search input; also reset to page 1 when search changes
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput.trim()), 300)
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim())
+      setPage(1)
+    }, 300)
     return () => clearTimeout(timer)
   }, [searchInput])
 
@@ -142,43 +154,68 @@ export default function TicketsTable() {
   const sortOrder = (sorting[0]?.desc ?? true) ? 'desc' : 'asc'
   const status = statusFilter !== 'all' ? statusFilter : undefined
   const category = categoryFilter !== 'all' ? categoryFilter : undefined
-
   const isFiltered = statusFilter !== 'all' || categoryFilter !== 'all' || searchInput !== ''
 
+  function handleSortingChange(updater: SortingState | ((prev: SortingState) => SortingState)) {
+    setPage(1)
+    setSorting(updater)
+  }
+
+  function handleStatusChange(val: string) {
+    setPage(1)
+    setStatusFilter(val)
+  }
+
+  function handleCategoryChange(val: string) {
+    setPage(1)
+    setCategoryFilter(val)
+  }
+
   function clearFilters() {
+    setPage(1)
     setStatusFilter('all')
     setCategoryFilter('all')
     setSearchInput('')
     setSearch('')
   }
 
-  const { data: tickets, isPending, isError } = useQuery({
-    queryKey: ['tickets', sortBy, sortOrder, status, category, search],
+  const { data: response, isPending, isError } = useQuery({
+    queryKey: ['tickets', sortBy, sortOrder, status, category, search, page],
     queryFn: () =>
       api
-        .get<Ticket[]>('/tickets', {
+        .get<TicketsResponse>('/tickets', {
           params: {
             sortBy,
             sortOrder,
+            page,
+            pageSize: PAGE_SIZE,
             ...(status && { status }),
             ...(category && { category }),
             ...(search && { search }),
           },
         })
         .then((r) => r.data),
+    placeholderData: keepPreviousData,
   })
 
+  const tickets = response?.data ?? []
+  const total = response?.total ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const to = Math.min(page * PAGE_SIZE, total)
+
   const table = useReactTable({
-    data: tickets ?? [],
+    data: tickets,
     columns,
     getCoreRowModel: getCoreRowModel(),
     manualSorting: true,
     state: { sorting },
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
   })
 
   return (
     <div>
+      {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Input
           placeholder="Search subject or sender…"
@@ -186,7 +223,7 @@ export default function TicketsTable() {
           onChange={(e) => setSearchInput(e.target.value)}
           className="max-w-xs"
         />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={handleStatusChange}>
           <SelectTrigger className="w-38">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
@@ -197,7 +234,7 @@ export default function TicketsTable() {
             <SelectItem value="CLOSED">Closed</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <Select value={categoryFilter} onValueChange={handleCategoryChange}>
           <SelectTrigger className="w-44">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
@@ -217,7 +254,8 @@ export default function TicketsTable() {
         )}
       </div>
 
-      {isPending ? (
+      {/* Table / states */}
+      {isPending && !response ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-12 w-full" />
@@ -254,6 +292,42 @@ export default function TicketsTable() {
             ))}
           </TableBody>
         </Table>
+      )}
+
+      {/* Pagination bar */}
+      {total > 0 && (
+        <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
+          <span>
+            Showing {from}–{to} of {total} tickets
+          </span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 1}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="px-2 tabular-nums">
+                {page} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages}
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

@@ -39,6 +39,11 @@ const mockTickets = [
   },
 ]
 
+// Server now returns { data, total }
+function mockResponse(tickets = mockTickets, total = tickets.length) {
+  return { data: { data: tickets, total } }
+}
+
 function renderTable() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -75,17 +80,17 @@ describe('TicketsTable — error state', () => {
 
 describe('TicketsTable — empty state', () => {
   it('shows the generic empty message when no tickets exist and no filters are active', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: [] })
+    vi.mocked(api.get).mockResolvedValue(mockResponse([], 0))
     renderTable()
     expect(await screen.findByText('No tickets yet.')).toBeInTheDocument()
   })
 
   it('shows a filter-specific message when a filter is active and no results match', async () => {
-    vi.mocked(api.get).mockResolvedValue({ data: [] })
+    vi.mocked(api.get).mockResolvedValue(mockResponse([], 0))
     renderTable()
     await screen.findByText('No tickets yet.')
 
-    // Typing sets isFiltered=true immediately (before debounce)
+    // Typing sets isFiltered=true immediately (before debounce fires)
     fireEvent.change(screen.getByPlaceholderText('Search subject or sender…'), {
       target: { value: 'xyz' },
     })
@@ -100,7 +105,7 @@ describe('TicketsTable — empty state', () => {
 
 describe('TicketsTable — populated', () => {
   beforeEach(() => {
-    vi.mocked(api.get).mockResolvedValue({ data: mockTickets })
+    vi.mocked(api.get).mockResolvedValue(mockResponse())
   })
 
   it('renders all five column headers', async () => {
@@ -186,7 +191,7 @@ describe('TicketsTable — populated', () => {
 
 describe('TicketsTable — sorting', () => {
   beforeEach(() => {
-    vi.mocked(api.get).mockResolvedValue({ data: mockTickets })
+    vi.mocked(api.get).mockResolvedValue(mockResponse())
   })
 
   it('passes default sort params on initial render', async () => {
@@ -254,6 +259,29 @@ describe('TicketsTable — sorting', () => {
       }))
     })
   })
+
+  it('sorting resets page to 1', async () => {
+    // Simulate being on page 2 by using a large total
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 60))
+    renderTable()
+    await screen.findByText('Login broken')
+
+    // Navigate to page 2
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    await waitFor(() => {
+      expect(vi.mocked(api.get)).toHaveBeenCalledWith('/tickets', expect.objectContaining({
+        params: expect.objectContaining({ page: 2 }),
+      }))
+    })
+
+    // Now sort — page should reset to 1
+    fireEvent.click(screen.getByRole('button', { name: 'Subject' }))
+    await waitFor(() => {
+      expect(vi.mocked(api.get)).toHaveBeenCalledWith('/tickets', expect.objectContaining({
+        params: expect.objectContaining({ page: 1, sortBy: 'subject' }),
+      }))
+    })
+  })
 })
 
 // =============================================================================
@@ -262,7 +290,7 @@ describe('TicketsTable — sorting', () => {
 
 describe('TicketsTable — filtering', () => {
   beforeEach(() => {
-    vi.mocked(api.get).mockResolvedValue({ data: mockTickets })
+    vi.mocked(api.get).mockResolvedValue(mockResponse())
   })
 
   it('renders the search input and two filter selects', async () => {
@@ -317,5 +345,97 @@ describe('TicketsTable — filtering', () => {
 
     expect(input).toHaveValue('')
     expect(screen.queryByRole('button', { name: /clear/i })).not.toBeInTheDocument()
+  })
+})
+
+// =============================================================================
+// Pagination
+// =============================================================================
+
+describe('TicketsTable — pagination', () => {
+  it('passes page=1 and pageSize=20 on initial render', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 3))
+    renderTable()
+    await screen.findByText('Login broken')
+    expect(vi.mocked(api.get)).toHaveBeenCalledWith('/tickets', expect.objectContaining({
+      params: expect.objectContaining({ page: 1, pageSize: 10 }),
+    }))
+  })
+
+  it('shows ticket count summary when data is loaded', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 3))
+    renderTable()
+    await screen.findByText('Login broken')
+    expect(screen.getByText('Showing 1–3 of 3 tickets')).toBeInTheDocument()
+  })
+
+  it('does not show pagination controls when all tickets fit on one page', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 3))
+    renderTable()
+    await screen.findByText('Login broken')
+    expect(screen.queryByRole('button', { name: 'Previous page' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Next page' })).not.toBeInTheDocument()
+  })
+
+  it('shows prev/next controls when there are multiple pages', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 60))
+    renderTable()
+    await screen.findByText('Login broken')
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeInTheDocument()
+  })
+
+  it('Previous is disabled on the first page', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 60))
+    renderTable()
+    await screen.findByText('Login broken')
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled()
+  })
+
+  it('clicking Next fetches page 2', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 60))
+    renderTable()
+    await screen.findByText('Login broken')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+
+    await waitFor(() => {
+      expect(vi.mocked(api.get)).toHaveBeenCalledWith('/tickets', expect.objectContaining({
+        params: expect.objectContaining({ page: 2 }),
+      }))
+    })
+  })
+
+  it('shows current page / total pages', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 60))
+    renderTable()
+    await screen.findByText('Login broken')
+    expect(screen.getByText('1 / 6')).toBeInTheDocument()
+  })
+
+  it('Next is disabled on the last page', async () => {
+    // Simulate being on the last page: return page=3 data with total=60
+    vi.mocked(api.get).mockResolvedValue(mockResponse(mockTickets, 30))
+    renderTable()
+    await screen.findByText('Login broken')
+
+    // Navigate to page 3
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    await waitFor(() => {
+      expect(vi.mocked(api.get)).toHaveBeenCalledWith('/tickets', expect.objectContaining({
+        params: expect.objectContaining({ page: 2 }),
+      }))
+    })
+    await screen.findByRole('button', { name: 'Next page' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }))
+    await waitFor(() => {
+      expect(vi.mocked(api.get)).toHaveBeenCalledWith('/tickets', expect.objectContaining({
+        params: expect.objectContaining({ page: 3 }),
+      }))
+    })
+    await screen.findByRole('button', { name: 'Next page' })
+
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled()
   })
 })

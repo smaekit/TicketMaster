@@ -32,6 +32,8 @@ export const ticketQuerySchema = z.object({
   status: z.enum(['OPEN', 'RESOLVED', 'CLOSED']).optional(),
   category: z.enum(['GENERAL_QUESTION', 'TECHNICAL_QUESTION', 'REFUND_REQUEST', 'UNCATEGORIZED']).optional(),
   search: z.string().trim().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
 })
 
 export type TicketQueryParams = z.infer<typeof ticketQuerySchema>

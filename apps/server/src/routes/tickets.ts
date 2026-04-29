@@ -13,30 +13,38 @@ router.get('/', async (req, res) => {
   const params = parseQuery(ticketQuerySchema, req.query, res)
   if (!params) return
 
-  const tickets = await prisma.ticket.findMany({
-    where: {
-      ...(params.status && { status: params.status }),
-      ...(params.category && { category: params.category }),
-      ...(params.search && {
-        OR: [
-          { subject: { contains: params.search, mode: 'insensitive' } },
-          { senderEmail: { contains: params.search, mode: 'insensitive' } },
-          { senderName: { contains: params.search, mode: 'insensitive' } },
-        ],
-      }),
-    },
-    select: {
-      id: true,
-      senderEmail: true,
-      senderName: true,
-      subject: true,
-      status: true,
-      category: true,
-      createdAt: true,
-    },
-    orderBy: { [params.sortBy]: params.sortOrder },
-  })
-  res.json(tickets)
+  const where = {
+    ...(params.status && { status: params.status }),
+    ...(params.category && { category: params.category }),
+    ...(params.search && {
+      OR: [
+        { subject: { contains: params.search, mode: 'insensitive' as const } },
+        { senderEmail: { contains: params.search, mode: 'insensitive' as const } },
+        { senderName: { contains: params.search, mode: 'insensitive' as const } },
+      ],
+    }),
+  }
+
+  const [total, data] = await prisma.$transaction([
+    prisma.ticket.count({ where }),
+    prisma.ticket.findMany({
+      where,
+      select: {
+        id: true,
+        senderEmail: true,
+        senderName: true,
+        subject: true,
+        status: true,
+        category: true,
+        createdAt: true,
+      },
+      orderBy: { [params.sortBy]: params.sortOrder },
+      skip: (params.page - 1) * params.pageSize,
+      take: params.pageSize,
+    }),
+  ])
+
+  res.json({ data, total })
 })
 
 // GET /api/tickets/:id
