@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
-import { ticketQuerySchema } from '@ticketmaster/shared'
-import { parseQuery } from '../lib/validate'
+import { ticketQuerySchema, ticketAssignSchema, Role } from '@ticketmaster/shared'
+import { parseQuery, parseBody } from '../lib/validate'
 
 const router = Router()
 
@@ -47,16 +47,50 @@ router.get('/', async (req, res) => {
   res.json({ data, total })
 })
 
+// GET /api/tickets/agents — list active agents for assignment (must be before /:id)
+router.get('/agents', async (_req, res) => {
+  const agents = await prisma.user.findMany({
+    where: { deletedAt: null, role: Role.AGENT },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  })
+  res.json(agents)
+})
+
 // GET /api/tickets/:id
 router.get('/:id', async (req, res) => {
-  const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id } })
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: req.params.id },
+    include: { assignedTo: { select: { id: true, name: true } } },
+  })
   if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
   res.json(ticket)
 })
 
 // PATCH /api/tickets/:id
-router.patch('/:id', async (_req, res) => {
-  res.status(501).json({ message: 'Not implemented' })
+router.patch('/:id', async (req, res) => {
+  const data = parseBody(ticketAssignSchema, req.body, res)
+  if (!data) return
+
+  const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id }, select: { id: true } })
+  if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
+
+  if (data.assignedToId !== null) {
+    const agent = await prisma.user.findUnique({
+      where: { id: data.assignedToId },
+      select: { role: true, deletedAt: true },
+    })
+    if (!agent || agent.deletedAt || agent.role !== Role.AGENT) {
+      return void res.status(400).json({ message: 'Invalid agent' })
+    }
+  }
+
+  const updated = await prisma.ticket.update({
+    where: { id: req.params.id },
+    data: { assignedToId: data.assignedToId },
+    include: { assignedTo: { select: { id: true, name: true } } },
+  })
+  res.json(updated)
 })
 
 export default router

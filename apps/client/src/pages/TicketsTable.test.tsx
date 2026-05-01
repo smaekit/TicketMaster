@@ -1,4 +1,5 @@
 import { render, screen, within, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 import TicketsTable from './TicketsTable'
@@ -47,9 +48,11 @@ function mockResponse(tickets = mockTickets, total = tickets.length) {
 function renderTable() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <QueryClientProvider client={client}>
-      <TicketsTable />
-    </QueryClientProvider>
+    <MemoryRouter>
+      <QueryClientProvider client={client}>
+        <TicketsTable />
+      </QueryClientProvider>
+    </MemoryRouter>
   )
 }
 

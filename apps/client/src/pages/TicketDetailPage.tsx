@@ -1,9 +1,20 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import api from '@/lib/api'
 import { type TicketStatus, type TicketCategory } from '@ticketmaster/shared'
+
+type Agent = { id: string; name: string }
 
 type TicketDetail = {
   id: string
@@ -15,7 +26,7 @@ type TicketDetail = {
   category: TicketCategory
   aiSummary: string | null
   aiReply: string | null
-  assignedToId: string | null
+  assignedTo: Agent | null
   createdAt: string
   updatedAt: string
 }
@@ -33,14 +44,40 @@ const CATEGORY_LABELS: Record<TicketCategory, string> = {
   UNCATEGORIZED: 'Uncategorized',
 }
 
+const UNASSIGNED = '__unassigned__'
+
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
 
   const { data: ticket, isLoading, isError } = useQuery<TicketDetail>({
     queryKey: ['ticket', id],
     queryFn: () => api.get(`/tickets/${id}`).then((r) => r.data),
     enabled: !!id,
   })
+
+  const { data: agents = [] } = useQuery<Agent[]>({
+    queryKey: ['agents'],
+    queryFn: () => api.get('/tickets/agents').then((r) => r.data),
+  })
+
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(UNASSIGNED)
+
+  useEffect(() => {
+    if (ticket) {
+      setSelectedAgentId(ticket.assignedTo?.id ?? UNASSIGNED)
+    }
+  }, [ticket])
+
+  const { mutate: assign, isPending } = useMutation({
+    mutationFn: (assignedToId: string | null) =>
+      api.patch(`/tickets/${id}`, { assignedToId }).then((r) => r.data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ticket', id] }),
+  })
+
+  const isDirty = ticket
+    ? selectedAgentId !== (ticket.assignedTo?.id ?? UNASSIGNED)
+    : false
 
   if (isLoading) {
     return (
@@ -86,6 +123,32 @@ export default function TicketDetailPage() {
         <div className="text-sm text-muted-foreground space-y-0.5">
           <p>From: <span className="text-foreground">{ticket.senderName ? `${ticket.senderName} <${ticket.senderEmail}>` : ticket.senderEmail}</span></p>
           <p>Received: <span className="text-foreground">{new Date(ticket.createdAt).toLocaleString()}</span></p>
+        </div>
+
+        <div className="rounded-md border bg-card p-4">
+          <p className="text-sm font-medium text-muted-foreground mb-3">Assigned to</p>
+          <div className="flex items-center gap-2">
+            <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="Unassigned" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>{agent.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {isDirty && (
+              <Button
+                size="sm"
+                disabled={isPending}
+                onClick={() => assign(selectedAgentId === UNASSIGNED ? null : selectedAgentId)}
+              >
+                {isPending ? 'Saving…' : 'Save'}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="rounded-md border bg-card p-4">

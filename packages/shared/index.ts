@@ -32,6 +32,11 @@ export type TicketStatus = z.infer<typeof ticketStatusSchema>
 export const ticketCategorySchema = z.enum(['GENERAL_QUESTION', 'TECHNICAL_QUESTION', 'REFUND_REQUEST', 'UNCATEGORIZED'])
 export type TicketCategory = z.infer<typeof ticketCategorySchema>
 
+export const ticketAssignSchema = z.object({
+  assignedToId: z.string().nullable(),
+})
+export type TicketAssignInput = z.infer<typeof ticketAssignSchema>
+
 export const ticketQuerySchema = z.object({
   sortBy: z.enum(['subject', 'senderEmail', 'status', 'category', 'createdAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
