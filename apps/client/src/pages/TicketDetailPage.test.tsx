@@ -113,16 +113,18 @@ describe('TicketDetailPage — ticket display', () => {
     expect(await screen.findByRole('heading', { name: 'Login broken' })).toBeInTheDocument()
   })
 
-  it('renders the status badge', async () => {
+  it('renders the status badge in the header', async () => {
     renderPage()
     await screen.findByRole('heading', { name: 'Login broken' })
-    expect(screen.getByText('Open')).toBeInTheDocument()
+    const badge = screen.getAllByText('Open').find(el => el.className.includes('bg-blue-100'))
+    expect(badge).toBeInTheDocument()
   })
 
-  it('renders the category label', async () => {
+  it('renders the category label in the header', async () => {
     renderPage()
     await screen.findByRole('heading', { name: 'Login broken' })
-    expect(screen.getByText('Technical Question')).toBeInTheDocument()
+    const label = screen.getAllByText('Technical Question').find(el => el.className.includes('text-muted-foreground'))
+    expect(label).toBeInTheDocument()
   })
 
   it('renders sender name and email', async () => {
@@ -146,23 +148,96 @@ describe('TicketDetailPage — ticket display', () => {
 })
 
 // =============================================================================
+// Status and category
+// =============================================================================
+
+describe('TicketDetailPage — status and category', () => {
+  beforeEach(() => mockHappyPath())
+
+  it('shows current status in the status select', async () => {
+    renderPage()
+    await screen.findByRole('heading', { name: 'Login broken' })
+    const [statusSelect] = screen.getAllByRole('combobox')
+    expect(statusSelect).toHaveTextContent('Open')
+  })
+
+  it('shows current category in the category select', async () => {
+    renderPage()
+    await screen.findByRole('heading', { name: 'Login broken' })
+    const [, categorySelect] = screen.getAllByRole('combobox')
+    expect(categorySelect).toHaveTextContent('Technical Question')
+  })
+
+  it('shows the Save button after changing status', async () => {
+    renderPage()
+    await screen.findByRole('heading', { name: 'Login broken' })
+    const [statusSelect] = screen.getAllByRole('combobox')
+
+    fireEvent.click(statusSelect)
+    fireEvent.click(await screen.findByRole('option', { name: 'Resolved' }))
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+  })
+
+  it('calls PATCH with the new status when Save is clicked', async () => {
+    vi.mocked(api.patch).mockResolvedValue({ data: { ...mockTicket, status: 'RESOLVED' } })
+    renderPage()
+    await screen.findByRole('heading', { name: 'Login broken' })
+    const [statusSelect] = screen.getAllByRole('combobox')
+
+    fireEvent.click(statusSelect)
+    fireEvent.click(await screen.findByRole('option', { name: 'Resolved' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(vi.mocked(api.patch)).toHaveBeenCalledWith('/tickets/ticket-1', {
+        status: 'RESOLVED',
+        category: 'TECHNICAL_QUESTION',
+        assignedToId: null,
+      })
+    })
+  })
+
+  it('calls PATCH with the new category when Save is clicked', async () => {
+    vi.mocked(api.patch).mockResolvedValue({ data: { ...mockTicket, category: 'REFUND_REQUEST' } })
+    renderPage()
+    await screen.findByRole('heading', { name: 'Login broken' })
+    const [, categorySelect] = screen.getAllByRole('combobox')
+
+    fireEvent.click(categorySelect)
+    fireEvent.click(await screen.findByRole('option', { name: 'Refund Request' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => {
+      expect(vi.mocked(api.patch)).toHaveBeenCalledWith('/tickets/ticket-1', {
+        status: 'OPEN',
+        category: 'REFUND_REQUEST',
+        assignedToId: null,
+      })
+    })
+  })
+})
+
+// =============================================================================
 // Assignment
 // =============================================================================
 
 describe('TicketDetailPage — assignment', () => {
-  it('shows "Unassigned" in the select when assignedTo is null', async () => {
+  it('shows "Unassigned" in the assigned-to select when assignedTo is null', async () => {
     mockHappyPath()
     renderPage()
     await screen.findByRole('heading', { name: 'Login broken' })
-    expect(screen.getByRole('combobox')).toHaveTextContent('Unassigned')
+    const [,, agentSelect] = screen.getAllByRole('combobox')
+    expect(agentSelect).toHaveTextContent('Unassigned')
   })
 
-  it('shows the assigned agent name in the select when assignedTo is set', async () => {
+  it('shows the assigned agent name in the assigned-to select when assignedTo is set', async () => {
     mockHappyPath({ assignedTo: { id: 'agent-1', name: 'Alice Agent' } })
     renderPage()
     await screen.findByRole('heading', { name: 'Login broken' })
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toHaveTextContent('Alice Agent')
+      const [,, agentSelect] = screen.getAllByRole('combobox')
+      expect(agentSelect).toHaveTextContent('Alice Agent')
     })
   })
 
@@ -177,8 +252,9 @@ describe('TicketDetailPage — assignment', () => {
     mockHappyPath()
     renderPage()
     await screen.findByRole('heading', { name: 'Login broken' })
+    const [,, agentSelect] = screen.getAllByRole('combobox')
 
-    fireEvent.click(screen.getByRole('combobox'))
+    fireEvent.click(agentSelect)
     fireEvent.click(await screen.findByRole('option', { name: 'Alice Agent' }))
 
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
@@ -189,32 +265,43 @@ describe('TicketDetailPage — assignment', () => {
     vi.mocked(api.patch).mockResolvedValue({ data: { ...mockTicket, assignedTo: mockAgents[0] } })
     renderPage()
     await screen.findByRole('heading', { name: 'Login broken' })
+    const [,, agentSelect] = screen.getAllByRole('combobox')
 
-    fireEvent.click(screen.getByRole('combobox'))
+    fireEvent.click(agentSelect)
     fireEvent.click(await screen.findByRole('option', { name: 'Alice Agent' }))
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
-      expect(vi.mocked(api.patch)).toHaveBeenCalledWith('/tickets/ticket-1', { assignedToId: 'agent-1' })
+      expect(vi.mocked(api.patch)).toHaveBeenCalledWith('/tickets/ticket-1', {
+        assignedToId: 'agent-1',
+        status: 'OPEN',
+        category: 'TECHNICAL_QUESTION',
+      })
     })
   })
 
-  it('calls PATCH with null when switching to Unassigned', async () => {
+  it('calls PATCH with null assignedToId when switching to Unassigned', async () => {
     mockHappyPath({ assignedTo: { id: 'agent-1', name: 'Alice Agent' } })
     vi.mocked(api.patch).mockResolvedValue({ data: { ...mockTicket, assignedTo: null } })
     renderPage()
     await screen.findByRole('heading', { name: 'Login broken' })
 
     await waitFor(() => {
-      expect(screen.getByRole('combobox')).toHaveTextContent('Alice Agent')
+      const [,, agentSelect] = screen.getAllByRole('combobox')
+      expect(agentSelect).toHaveTextContent('Alice Agent')
     })
 
-    fireEvent.click(screen.getByRole('combobox'))
+    const [,, agentSelect] = screen.getAllByRole('combobox')
+    fireEvent.click(agentSelect)
     fireEvent.click(await screen.findByRole('option', { name: 'Unassigned' }))
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
-      expect(vi.mocked(api.patch)).toHaveBeenCalledWith('/tickets/ticket-1', { assignedToId: null })
+      expect(vi.mocked(api.patch)).toHaveBeenCalledWith('/tickets/ticket-1', {
+        assignedToId: null,
+        status: 'OPEN',
+        category: 'TECHNICAL_QUESTION',
+      })
     })
   })
 })

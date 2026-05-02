@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
-import { ticketQuerySchema, ticketAssignSchema, Role } from '@ticketmaster/shared'
+import { ticketQuerySchema, ticketUpdateSchema, Role } from '@ticketmaster/shared'
 import { parseQuery, parseBody } from '../lib/validate'
 
 const router = Router()
@@ -69,13 +69,13 @@ router.get('/:id', async (req, res) => {
 
 // PATCH /api/tickets/:id
 router.patch('/:id', async (req, res) => {
-  const data = parseBody(ticketAssignSchema, req.body, res)
+  const data = parseBody(ticketUpdateSchema, req.body, res)
   if (!data) return
 
   const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id }, select: { id: true } })
   if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
 
-  if (data.assignedToId !== null) {
+  if (data.assignedToId !== undefined && data.assignedToId !== null) {
     const agent = await prisma.user.findUnique({
       where: { id: data.assignedToId },
       select: { role: true, deletedAt: true },
@@ -85,9 +85,15 @@ router.patch('/:id', async (req, res) => {
     }
   }
 
+  const updateData = {
+    ...(data.status !== undefined && { status: data.status }),
+    ...(data.category !== undefined && { category: data.category }),
+    ...(data.assignedToId !== undefined && { assignedToId: data.assignedToId }),
+  }
+
   const updated = await prisma.ticket.update({
     where: { id: req.params.id },
-    data: { assignedToId: data.assignedToId },
+    data: updateData,
     include: { assignedTo: { select: { id: true, name: true } } },
   })
   res.json(updated)
