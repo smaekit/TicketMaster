@@ -199,6 +199,23 @@ export type EnumTicketCategoryWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel>
 }
 
+export type EnumReplySourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReplySource | Prisma.EnumReplySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReplySourceFilter<$PrismaModel> | $Enums.ReplySource
+}
+
+export type EnumReplySourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReplySource | Prisma.EnumReplySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReplySourceWithAggregatesFilter<$PrismaModel> | $Enums.ReplySource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumReplySourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumReplySourceFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -395,6 +412,23 @@ export type NestedEnumTicketCategoryWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTicketCategoryFilter<$PrismaModel>
+}
+
+export type NestedEnumReplySourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReplySource | Prisma.EnumReplySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReplySourceFilter<$PrismaModel> | $Enums.ReplySource
+}
+
+export type NestedEnumReplySourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ReplySource | Prisma.EnumReplySourceFieldRefInput<$PrismaModel>
+  in?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ReplySource[] | Prisma.ListEnumReplySourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumReplySourceWithAggregatesFilter<$PrismaModel> | $Enums.ReplySource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumReplySourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumReplySourceFilter<$PrismaModel>
 }
 
 

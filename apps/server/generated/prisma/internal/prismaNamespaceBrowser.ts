@@ -56,6 +56,7 @@ export const ModelName = {
   account: 'account',
   verification: 'verification',
   Ticket: 'Ticket',
+  TicketReply: 'TicketReply',
   KbArticle: 'KbArticle'
 } as const
 
@@ -151,6 +152,21 @@ export const TicketScalarFieldEnum = {
 } as const
 
 export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
+
+
+export const TicketReplyScalarFieldEnum = {
+  id: 'id',
+  body: 'body',
+  source: 'source',
+  authorId: 'authorId',
+  senderEmail: 'senderEmail',
+  senderName: 'senderName',
+  ticketId: 'ticketId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketReplyScalarFieldEnum = (typeof TicketReplyScalarFieldEnum)[keyof typeof TicketReplyScalarFieldEnum]
 
 
 export const KbArticleScalarFieldEnum = {

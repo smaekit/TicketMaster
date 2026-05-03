@@ -50,3 +50,11 @@ export const ticketQuerySchema = z.object({
 })
 
 export type TicketQueryParams = z.infer<typeof ticketQuerySchema>
+
+export const replySourceSchema = z.enum(['AGENT', 'CUSTOMER'])
+export type ReplySource = z.infer<typeof replySourceSchema>
+
+export const createReplySchema = z.object({
+  body: z.string().trim().min(1, 'Reply cannot be empty'),
+})
+export type CreateReplyInput = z.infer<typeof createReplySchema>

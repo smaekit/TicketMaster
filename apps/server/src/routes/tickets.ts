@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
-import { ticketQuerySchema, ticketUpdateSchema, Role } from '@ticketmaster/shared'
+import { ticketQuerySchema, ticketUpdateSchema, createReplySchema, Role } from '@ticketmaster/shared'
 import { parseQuery, parseBody } from '../lib/validate'
 
 const router = Router()
@@ -61,7 +61,13 @@ router.get('/agents', async (_req, res) => {
 router.get('/:id', async (req, res) => {
   const ticket = await prisma.ticket.findUnique({
     where: { id: req.params.id },
-    include: { assignedTo: { select: { id: true, name: true } } },
+    include: {
+      assignedTo: { select: { id: true, name: true } },
+      replies: {
+        include: { author: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
   })
   if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
   res.json(ticket)
@@ -97,6 +103,26 @@ router.patch('/:id', async (req, res) => {
     include: { assignedTo: { select: { id: true, name: true } } },
   })
   res.json(updated)
+})
+
+// POST /api/tickets/:id/replies
+router.post('/:id/replies', async (req, res) => {
+  const data = parseBody(createReplySchema, req.body, res)
+  if (!data) return
+
+  const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id }, select: { id: true } })
+  if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
+
+  const reply = await prisma.ticketReply.create({
+    data: {
+      body: data.body,
+      source: 'AGENT',
+      ticketId: req.params.id,
+      authorId: res.locals.session!.user.id,
+    },
+    include: { author: { select: { id: true, name: true } } },
+  })
+  res.status(201).json(reply)
 })
 
 export default router

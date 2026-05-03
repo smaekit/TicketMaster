@@ -66,14 +66,30 @@ router.post('/mailgun', upload.none(), async (req, res) => {
 
   const { email: senderEmail, name: senderName } = parseSender(from)
   const normalizedSubject = subject?.trim() || '(No subject)'
+  // Strip reply/forward prefixes to find the original ticket subject
+  const baseSubject = normalizedSubject.replace(/^(re|fwd|fw):\s*/i, '').trim()
 
-  const existing = await prisma.ticket.findFirst({
-    where: { senderEmail, subject: normalizedSubject, status: 'OPEN' },
+  const matchingTicket = await prisma.ticket.findFirst({
+    where: {
+      senderEmail,
+      status: 'OPEN',
+      subject: { in: [normalizedSubject, baseSubject] },
+    },
     select: { id: true },
+    orderBy: { createdAt: 'desc' },
   })
 
-  if (existing) {
-    res.status(200).json({ message: 'Duplicate ticket ignored' })
+  if (matchingTicket) {
+    await prisma.ticketReply.create({
+      data: {
+        body,
+        source: 'CUSTOMER',
+        senderEmail,
+        senderName: senderName ?? null,
+        ticketId: matchingTicket.id,
+      },
+    })
+    res.status(200).json({ message: 'Reply added to ticket' })
     return
   }
 

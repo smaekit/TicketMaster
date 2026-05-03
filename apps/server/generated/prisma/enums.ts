@@ -18,6 +18,14 @@ export const TicketStatus = {
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
 
 
+export const ReplySource = {
+  AGENT: 'AGENT',
+  CUSTOMER: 'CUSTOMER'
+} as const
+
+export type ReplySource = (typeof ReplySource)[keyof typeof ReplySource]
+
+
 export const TicketCategory = {
   GENERAL_QUESTION: 'GENERAL_QUESTION',
   TECHNICAL_QUESTION: 'TECHNICAL_QUESTION',

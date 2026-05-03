@@ -67,6 +67,11 @@ export type verification = Prisma.verificationModel
  */
 export type Ticket = Prisma.TicketModel
 /**
+ * Model TicketReply
+ * 
+ */
+export type TicketReply = Prisma.TicketReplyModel
+/**
  * Model KbArticle
  * 
  */

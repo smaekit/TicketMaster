@@ -5,7 +5,7 @@ import { vi } from 'vitest'
 import TicketDetailPage from './TicketDetailPage'
 
 vi.mock('@/lib/api', () => ({
-  default: { get: vi.fn(), patch: vi.fn() },
+  default: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
 }))
 
 import api from '@/lib/api'
@@ -28,6 +28,7 @@ const mockTicket = {
   assignedTo: null,
   createdAt: '2024-01-15T10:00:00.000Z',
   updatedAt: '2024-01-15T10:00:00.000Z',
+  replies: [],
 }
 
 function renderPage() {
