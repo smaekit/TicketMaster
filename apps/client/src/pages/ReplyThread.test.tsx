@@ -67,4 +67,10 @@ describe('ReplyThread — with replies', () => {
     render(<ReplyThread replies={[agentReply]} />)
     expect(screen.queryByText('No replies yet.')).not.toBeInTheDocument()
   })
+
+  it('renders all replies when multiple are present', () => {
+    render(<ReplyThread replies={[agentReply, customerReply]} />)
+    expect(screen.getByText('We are looking into this.')).toBeInTheDocument()
+    expect(screen.getByText('Still not working.')).toBeInTheDocument()
+  })
 })
