@@ -8,13 +8,15 @@ import { parseBody } from '../lib/validate'
 const router = Router()
 const upload = multer()
 
+const MAX_SUBJECT_LENGTH = 255
+
 const mailgunPayloadSchema = z.object({
   timestamp: z.string(),
   token: z.string(),
   signature: z.string(),
   from: z.string(),
-  subject: z.string().optional(),
-  'stripped-text': z.string().optional(),
+  subject: z.string().max(MAX_SUBJECT_LENGTH).optional(),
+  'body-html': z.string().optional(),
   'body-plain': z.string().optional(),
 })
 
@@ -51,7 +53,7 @@ router.post('/mailgun', upload.none(), async (req, res) => {
   if (!data) return
 
   const { timestamp, token, signature, from, subject } = data
-  const body = data['stripped-text'] ?? data['body-plain'] ?? ''
+  const body = data['body-html'] ?? data['body-plain'] ?? ''
 
   // Reject replays older than 5 minutes
   if (parseInt(timestamp, 10) < Math.floor(Date.now() / 1000) - 300) {

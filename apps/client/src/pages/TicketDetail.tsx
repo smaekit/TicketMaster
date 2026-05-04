@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify'
 import { type TicketStatus, type TicketCategory } from '@ticketmaster/shared'
 import { type Ticket } from './TicketDetailPage'
 
@@ -41,7 +42,10 @@ export function TicketDetail({ ticket }: { ticket: Ticket }) {
 
       <div className="rounded-md border bg-card p-4">
         <p className="text-sm font-medium text-muted-foreground mb-2">Message</p>
-        <p className="text-sm whitespace-pre-wrap">{body}</p>
+        <div
+          className="text-sm"
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }}
+        />
       </div>
 
       {aiSummary && (

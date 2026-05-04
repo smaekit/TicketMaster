@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify'
+
 export type TicketReply = {
   id: string
   body: string
@@ -33,7 +35,11 @@ export function ReplyThread({ replies }: Props) {
                 {new Date(reply.createdAt).toLocaleString()}
               </span>
             </div>
-            <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
+            {isAgent ? (
+              <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
+            ) : (
+              <div className="text-sm" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(reply.body) }} />
+            )}
           </div>
         )
       })}
