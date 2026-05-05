@@ -94,7 +94,7 @@ model Ticket {
   category     TicketCategory @default(UNCATEGORIZED)
   aiSummary    String?
   aiReply      String?
-  assignedTo   user?          @relation(fields: [assignedToId], references: [id])
+  assignedTo   user?          @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   assignedToId String?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
