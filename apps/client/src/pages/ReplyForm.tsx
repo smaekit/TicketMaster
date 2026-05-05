@@ -8,6 +8,7 @@ type Props = { ticketId: string }
 
 export function ReplyForm({ ticketId }: Props) {
   const [body, setBody] = useState('')
+  const [polishing, setPolishing] = useState(false)
   const queryClient = useQueryClient()
 
   const { mutate, isPending } = useMutation({
@@ -18,6 +19,16 @@ export function ReplyForm({ ticketId }: Props) {
     },
   })
 
+  const handlePolish = async () => {
+    setPolishing(true)
+    try {
+      const { data } = await api.post(`/tickets/${ticketId}/polish-reply`, { body })
+      setBody(data.polishedReply)
+    } finally {
+      setPolishing(false)
+    }
+  }
+
   return (
     <div className="space-y-2">
       <Textarea
@@ -26,8 +37,16 @@ export function ReplyForm({ ticketId }: Props) {
         onChange={(e) => setBody(e.target.value)}
         rows={3}
       />
-      <div className="flex justify-end">
-        <Button size="sm" disabled={isPending || body.trim() === ''} onClick={() => mutate()}>
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={polishing || isPending || body.trim() === ''}
+          onClick={handlePolish}
+        >
+          {polishing ? 'Polishing…' : 'Polish'}
+        </Button>
+        <Button size="sm" disabled={isPending || polishing || body.trim() === ''} onClick={() => mutate()}>
           {isPending ? 'Sending…' : 'Send reply'}
         </Button>
       </div>
