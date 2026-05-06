@@ -4,6 +4,7 @@ import multer from 'multer'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { parseBody } from '../lib/validate'
+import { sendClassifyJob } from '../lib/classify'
 
 const router = Router()
 const upload = multer()
@@ -95,7 +96,7 @@ router.post('/mailgun', upload.none(), async (req, res) => {
     return
   }
 
-  await prisma.ticket.create({
+  const ticket = await prisma.ticket.create({
     data: {
       senderEmail,
       senderName,
@@ -103,6 +104,8 @@ router.post('/mailgun', upload.none(), async (req, res) => {
       body,
     },
   })
+
+  await sendClassifyJob(ticket)
 
   res.status(200).json({ message: 'Ticket created' })
 })

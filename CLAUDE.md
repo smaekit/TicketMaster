@@ -86,6 +86,7 @@ TicketMaster/
 | Auth | Better Auth (Prisma adapter, email/password) |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS, React Router 7, shadcn/ui, TanStack Query, Axios |
 | AI | Claude API (`@anthropic-ai/sdk`) |
+| Job queue | pg-boss (PostgreSQL-backed) |
 | Email inbound | Mailgun webhook |
 | Email outbound | SendGrid |
 | Deployment | Docker + Docker Compose |
@@ -262,6 +263,29 @@ bun run test:ui    # interactive browser UI (best for writing new tests)
 - Navigation (`<Link href="...">`) — component test with `MemoryRouter` + `toHaveAttribute('href', ...)`
 
 Use the **`playwright-e2e-writer`** agent when e2e tests are genuinely needed. Tests go in `tests/e2e/`. The agent knows the full test setup (ports, credentials, file structure, auth patterns).
+
+## Job Queue (pg-boss)
+
+Background work that should not block an HTTP response runs through **pg-boss** — a job queue backed by PostgreSQL. Jobs are persisted as rows in the `pgboss` schema (same `helpdesk` database), so they survive server crashes and are retried automatically on failure.
+
+**Key files:**
+- `apps/server/src/lib/boss.ts` — singleton `PgBoss` instance; imported wherever jobs are sent or workers registered
+- `apps/server/src/lib/classify.ts` — defines the `classify-ticket` queue: `sendClassifyJob()` enqueues a job, `startClassifyWorker()` registers the handler that does the GPT work
+- `apps/server/src/index.ts` — calls `boss.start()` and `startClassifyWorker()` on startup; calls `boss.stop()` on `SIGTERM`/`SIGINT` for graceful shutdown
+
+**How to add a new background job:**
+
+1. Define a queue name constant and a job data type in a new `apps/server/src/lib/<name>.ts` file
+2. Export a `send<Name>Job(...)` function that calls `boss.send(QUEUE, data)`
+3. Export a `start<Name>Worker()` function that calls `boss.createQueue(QUEUE)` then `boss.work(QUEUE, handler)`
+4. Call `start<Name>Worker()` in `index.ts` alongside the existing classify worker
+
+**Patterns:**
+- Always `await boss.createQueue(QUEUE)` before `boss.work()` — pg-boss v12 requires queues to exist before sending or working
+- The `work()` handler receives an **array** of jobs; destructure as `async ([job]) => { ... job.data ... }`
+- Do not try/catch inside handlers — pg-boss catches thrown errors, marks the job failed, and retries up to `retryLimit` (default: 2)
+- `boss.send()` is a fast DB insert (a few ms) — callers can `await` it without meaningfully delaying a response
+- Inspect job state directly in the DB: `SELECT id, name, data, state FROM pgboss.job`
 
 ## UI Components (shadcn/ui)
 
