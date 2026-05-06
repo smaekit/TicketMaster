@@ -225,10 +225,12 @@ Tests live alongside their component: `src/pages/Foo.tsx` → `src/pages/Foo.tes
 
 **Commands** (run from `apps/client/`):
 ```bash
-bun test           # run all tests once
-bun test:watch     # watch mode
-bun test:ui        # interactive browser UI (best for writing new tests)
+bun run test       # run all tests once  ← use this, NOT "bun test"
+bun run test:watch # watch mode
+bun run test:ui    # interactive browser UI (best for writing new tests)
 ```
+
+> **Important:** Always use `bun run test`, never `bun test`. `bun test` invokes Bun's native test runner, which doesn't load the Vitest config and fails with "`describe` is not defined".
 
 **Patterns:**
 - Wrap components under test in `QueryClientProvider` with `retry: false` to prevent retries in tests

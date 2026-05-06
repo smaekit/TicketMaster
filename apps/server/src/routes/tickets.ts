@@ -137,7 +137,7 @@ router.post('/:id/polish-reply', async (req, res) => {
   if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
 
   const agentName = res.locals.session!.user.name
-  const customerFirstName = ticket.senderName.split(' ')[0]
+  const customerFirstName = ticket.senderName?.split(' ')[0] ?? 'there'
 
   const { text } = await generateText({
     model: openai('gpt-5-nano'),
@@ -146,6 +146,48 @@ router.post('/:id/polish-reply', async (req, res) => {
   })
 
   res.json({ polishedReply: text })
+})
+
+// POST /api/tickets/:id/summarize
+router.post('/:id/summarize', async (req, res) => {
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: req.params.id },
+    include: {
+      replies: {
+        include: { author: { select: { name: true } } },
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  })
+  if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
+
+  const lines = [
+    `Subject: ${ticket.subject}`,
+    `From: ${ticket.senderName ? `${ticket.senderName} <${ticket.senderEmail}>` : ticket.senderEmail}`,
+    '',
+    'Original message:',
+    ticket.body,
+  ]
+
+  if (ticket.replies.length > 0) {
+    lines.push('', 'Replies:')
+    for (const reply of ticket.replies) {
+      const author = reply.source === 'AGENT'
+        ? (reply.author?.name ?? 'Agent')
+        : (reply.senderName ?? reply.senderEmail ?? 'Customer')
+      lines.push(`${author}: ${reply.body}`)
+    }
+  }
+
+  const { text: summary } = await generateText({
+    model: openai('gpt-5-nano'),
+    system: 'You are a support assistant. Summarize the following customer support ticket and conversation in 2–3 sentences. Focus on the core issue and the current status of the conversation.',
+    prompt: lines.join('\n'),
+  })
+
+  await prisma.ticket.update({ where: { id: req.params.id }, data: { aiSummary: summary } })
+
+  res.json({ aiSummary: summary })
 })
 
 export default router

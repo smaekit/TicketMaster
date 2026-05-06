@@ -96,3 +96,80 @@ describe('ReplyForm — submission', () => {
     })
   })
 })
+
+// =============================================================================
+// Polish
+// =============================================================================
+
+describe('ReplyForm — polish', () => {
+  it('renders the Polish button', () => {
+    renderForm()
+    expect(screen.getByRole('button', { name: 'Polish' })).toBeInTheDocument()
+  })
+
+  it('disables Polish when textarea is empty', () => {
+    renderForm()
+    expect(screen.getByRole('button', { name: 'Polish' })).toBeDisabled()
+  })
+
+  it('disables Polish when textarea contains only whitespace', async () => {
+    const user = userEvent.setup()
+    renderForm()
+    await user.type(screen.getByPlaceholderText('Write a reply…'), '   ')
+    expect(screen.getByRole('button', { name: 'Polish' })).toBeDisabled()
+  })
+
+  it('calls api.post with the polish endpoint and current body', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: { polishedReply: 'Polished.' } })
+    const user = userEvent.setup()
+    renderForm('ticket-42')
+
+    await user.type(screen.getByPlaceholderText('Write a reply…'), 'rough draft')
+    await user.click(screen.getByRole('button', { name: 'Polish' }))
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/tickets/ticket-42/polish-reply', { body: 'rough draft' })
+    })
+  })
+
+  it('replaces textarea content with the polished reply on success', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: { polishedReply: 'Polished reply text.' } })
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByPlaceholderText('Write a reply…'), 'rough draft')
+    await user.click(screen.getByRole('button', { name: 'Polish' }))
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('Write a reply…')).toHaveValue('Polished reply text.')
+    })
+  })
+
+  it('shows "Polishing…" and disables both buttons while the request is in flight', async () => {
+    vi.mocked(api.post).mockReturnValue(new Promise(() => {}))
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByPlaceholderText('Write a reply…'), 'draft')
+    await user.click(screen.getByRole('button', { name: 'Polish' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Polishing…' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Send reply' })).toBeDisabled()
+    })
+  })
+
+  it('leaves textarea unchanged and re-enables buttons when polishing fails', async () => {
+    vi.mocked(api.post).mockRejectedValue(new Error('network error'))
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.type(screen.getByPlaceholderText('Write a reply…'), 'original draft')
+    await user.click(screen.getByRole('button', { name: 'Polish' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Polish' })).toBeEnabled()
+    })
+    expect(screen.getByPlaceholderText('Write a reply…')).toHaveValue('original draft')
+  })
+})

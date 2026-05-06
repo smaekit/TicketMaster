@@ -24,6 +24,8 @@ export function ReplyForm({ ticketId }: Props) {
     try {
       const { data } = await api.post(`/tickets/${ticketId}/polish-reply`, { body })
       setBody(data.polishedReply)
+    } catch {
+      // body stays unchanged; polishing state reset in finally
     } finally {
       setPolishing(false)
     }

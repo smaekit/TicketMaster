@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify'
 import { type TicketStatus, type TicketCategory } from '@ticketmaster/shared'
 import { type Ticket } from './TicketDetailPage'
+import { TicketSummary } from './TicketSummary'
 
 const STATUS_STYLES: Record<TicketStatus, string> = {
   OPEN: 'bg-blue-100 text-blue-700',
@@ -23,6 +24,7 @@ const CATEGORY_LABELS: Record<TicketCategory, string> = {
 
 export function TicketDetail({ ticket }: { ticket: Ticket }) {
   const { senderEmail, senderName, subject, body, status, category, aiSummary, aiReply, createdAt } = ticket
+
   return (
     <>
       <div>
@@ -47,6 +49,8 @@ export function TicketDetail({ ticket }: { ticket: Ticket }) {
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }}
         />
       </div>
+
+      <TicketSummary ticket={ticket} />
 
       {aiSummary && (
         <div className="rounded-md border bg-card p-4">
