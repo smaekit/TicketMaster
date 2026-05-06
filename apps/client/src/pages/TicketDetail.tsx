@@ -23,7 +23,7 @@ const CATEGORY_LABELS: Record<TicketCategory, string> = {
 }
 
 export function TicketDetail({ ticket }: { ticket: Ticket }) {
-  const { senderEmail, senderName, subject, body, status, category, aiSummary, aiReply, createdAt } = ticket
+  const { senderEmail, senderName, subject, body, status, category, aiReply, createdAt } = ticket
 
   return (
     <>
@@ -51,13 +51,6 @@ export function TicketDetail({ ticket }: { ticket: Ticket }) {
       </div>
 
       <TicketSummary ticket={ticket} />
-
-      {aiSummary && (
-        <div className="rounded-md border bg-card p-4">
-          <p className="text-sm font-medium text-muted-foreground mb-2">AI Summary</p>
-          <p className="text-sm whitespace-pre-wrap">{aiSummary}</p>
-        </div>
-      )}
 
       {aiReply && (
         <div className="rounded-md border bg-card p-4">
