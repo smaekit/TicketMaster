@@ -26,15 +26,17 @@ export const editUserSchema = z.object({
 
 export type EditUserInput = z.infer<typeof editUserSchema>
 
-export const ticketStatusSchema = z.enum(['OPEN', 'RESOLVED', 'CLOSED'])
+export const ticketStatusSchema = z.enum(['NEW', 'PROCESSING', 'OPEN', 'RESOLVED', 'CLOSED'])
 export type TicketStatus = z.infer<typeof ticketStatusSchema>
 
 export const ticketCategorySchema = z.enum(['GENERAL_QUESTION', 'TECHNICAL_QUESTION', 'REFUND_REQUEST', 'UNCATEGORIZED'])
 export type TicketCategory = z.infer<typeof ticketCategorySchema>
 
+export const agentTicketStatusSchema = z.enum(['OPEN', 'RESOLVED', 'CLOSED'])
+
 export const ticketUpdateSchema = z.object({
   assignedToId: z.string().nullable().optional(),
-  status: ticketStatusSchema.optional(),
+  status: agentTicketStatusSchema.optional(),
   category: ticketCategorySchema.optional(),
 })
 export type TicketUpdateInput = z.infer<typeof ticketUpdateSchema>
@@ -51,7 +53,7 @@ export const ticketQuerySchema = z.object({
 
 export type TicketQueryParams = z.infer<typeof ticketQuerySchema>
 
-export const replySourceSchema = z.enum(['AGENT', 'CUSTOMER'])
+export const replySourceSchema = z.enum(['AGENT', 'CUSTOMER', 'AI'])
 export type ReplySource = z.infer<typeof replySourceSchema>
 
 export const createReplySchema = z.object({

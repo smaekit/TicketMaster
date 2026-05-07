@@ -17,7 +17,9 @@ router.get('/', async (req, res) => {
   if (!params) return
 
   const where = {
-    ...(params.status && { status: params.status }),
+    status: params.status
+      ? params.status
+      : { notIn: ['NEW', 'PROCESSING'] as const },
     ...(params.category && { category: params.category }),
     ...(params.search && {
       OR: [

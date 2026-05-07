@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { parseBody } from '../lib/validate'
 import { sendClassifyJob } from '../lib/classify'
+import { sendAutoResolveJob } from '../lib/auto-resolve'
 
 const router = Router()
 const upload = multer()
@@ -75,7 +76,7 @@ router.post('/mailgun', upload.none(), async (req, res) => {
   const matchingTicket = await prisma.ticket.findFirst({
     where: {
       senderEmail,
-      status: 'OPEN',
+      status: { in: ['NEW', 'PROCESSING', 'OPEN'] },
       subject: { in: [normalizedSubject, baseSubject] },
     },
     select: { id: true },
@@ -106,6 +107,7 @@ router.post('/mailgun', upload.none(), async (req, res) => {
   })
 
   await sendClassifyJob(ticket)
+  await sendAutoResolveJob(ticket)
 
   res.status(200).json({ message: 'Ticket created' })
 })

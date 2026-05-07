@@ -49,6 +49,8 @@ type TicketsResponse = {
 const PAGE_SIZE = 10
 
 const STATUS_STYLES: Record<TicketStatus, string> = {
+  NEW: 'bg-yellow-100 text-yellow-700',
+  PROCESSING: 'bg-orange-100 text-orange-700',
   OPEN: 'bg-blue-100 text-blue-700',
   RESOLVED: 'bg-green-100 text-green-700',
   CLOSED: 'bg-gray-100 text-gray-600',

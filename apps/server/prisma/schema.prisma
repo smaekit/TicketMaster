@@ -8,6 +8,8 @@ datasource db {
 }
 
 enum TicketStatus {
+  NEW
+  PROCESSING
   OPEN
   RESOLVED
   CLOSED
@@ -16,6 +18,7 @@ enum TicketStatus {
 enum ReplySource {
   AGENT
   CUSTOMER
+  AI
 }
 
 enum TicketCategory {
@@ -90,8 +93,9 @@ model Ticket {
   senderName   String?
   subject      String
   body         String
-  status       TicketStatus   @default(OPEN)
+  status       TicketStatus   @default(NEW)
   category     TicketCategory @default(UNCATEGORIZED)
+  autoResolved Boolean        @default(false)
   aiSummary    String?
   aiReply      String?
   assignedTo   user?          @relation(fields: [assignedToId], references: [id], onDelete: SetNull)

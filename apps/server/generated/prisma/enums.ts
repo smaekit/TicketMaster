@@ -10,6 +10,8 @@
 */
 
 export const TicketStatus = {
+  NEW: 'NEW',
+  PROCESSING: 'PROCESSING',
   OPEN: 'OPEN',
   RESOLVED: 'RESOLVED',
   CLOSED: 'CLOSED'
@@ -20,7 +22,8 @@ export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
 
 export const ReplySource = {
   AGENT: 'AGENT',
-  CUSTOMER: 'CUSTOMER'
+  CUSTOMER: 'CUSTOMER',
+  AI: 'AI'
 } as const
 
 export type ReplySource = (typeof ReplySource)[keyof typeof ReplySource]

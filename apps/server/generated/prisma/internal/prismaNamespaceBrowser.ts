@@ -144,6 +144,7 @@ export const TicketScalarFieldEnum = {
   body: 'body',
   status: 'status',
   category: 'category',
+  autoResolved: 'autoResolved',
   aiSummary: 'aiSummary',
   aiReply: 'aiReply',
   assignedToId: 'assignedToId',

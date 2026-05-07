@@ -4,12 +4,16 @@ import { type Ticket } from './TicketDetailPage'
 import { TicketSummary } from './TicketSummary'
 
 const STATUS_STYLES: Record<TicketStatus, string> = {
+  NEW: 'bg-yellow-100 text-yellow-700',
+  PROCESSING: 'bg-orange-100 text-orange-700',
   OPEN: 'bg-blue-100 text-blue-700',
   RESOLVED: 'bg-green-100 text-green-700',
   CLOSED: 'bg-gray-100 text-gray-600',
 }
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
+  NEW: 'New',
+  PROCESSING: 'Processing',
   OPEN: 'Open',
   RESOLVED: 'Resolved',
   CLOSED: 'Closed',
@@ -23,7 +27,7 @@ const CATEGORY_LABELS: Record<TicketCategory, string> = {
 }
 
 export function TicketDetail({ ticket }: { ticket: Ticket }) {
-  const { senderEmail, senderName, subject, body, status, category, aiReply, createdAt } = ticket
+  const { senderEmail, senderName, subject, body, status, category, aiReply, createdAt, updatedAt } = ticket
 
   return (
     <>
@@ -40,6 +44,7 @@ export function TicketDetail({ ticket }: { ticket: Ticket }) {
       <div className="text-sm text-muted-foreground space-y-0.5">
         <p>From: <span className="text-foreground">{senderName ? `${senderName} <${senderEmail}>` : senderEmail}</span></p>
         <p>Received: <span className="text-foreground">{new Date(createdAt).toLocaleString()}</span></p>
+        <p>Updated: <span className="text-foreground">{new Date(updatedAt).toLocaleString()}</span></p>
       </div>
 
       <div className="rounded-md border bg-card p-4">

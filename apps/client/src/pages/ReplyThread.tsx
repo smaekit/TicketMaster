@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify'
 export type TicketReply = {
   id: string
   body: string
-  source: 'AGENT' | 'CUSTOMER'
+  source: 'AGENT' | 'CUSTOMER' | 'AI'
   author: { id: string; name: string } | null
   senderEmail: string | null
   senderName: string | null
@@ -22,23 +22,26 @@ export function ReplyThread({ replies }: Props) {
   return (
     <div className="space-y-4">
       {replies.map((reply) => {
-        const isAgent = reply.source === 'AGENT'
-        const displayName = isAgent
-          ? (reply.author?.name ?? 'Agent')
-          : (reply.senderName ? `${reply.senderName} <${reply.senderEmail}>` : reply.senderEmail)
+        const isCustomer = reply.source === 'CUSTOMER'
+        const displayName = isCustomer
+          ? (reply.senderName ? `${reply.senderName} <${reply.senderEmail}>` : reply.senderEmail)
+          : reply.source === 'AI'
+            ? 'Support'
+            : (reply.author?.name ?? 'Agent')
+        const borderColor = isCustomer ? 'border-muted-foreground' : 'border-primary'
         return (
-          <div key={reply.id} className={`border-l-2 pl-3 ${isAgent ? 'border-primary' : 'border-muted-foreground'}`}>
+          <div key={reply.id} className={`border-l-2 pl-3 ${borderColor}`}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-medium">{displayName}</span>
-              {!isAgent && <span className="text-xs text-muted-foreground">(customer)</span>}
+              {isCustomer && <span className="text-xs text-muted-foreground">(customer)</span>}
               <span className="text-xs text-muted-foreground">
                 {new Date(reply.createdAt).toLocaleString()}
               </span>
             </div>
-            {isAgent ? (
-              <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
-            ) : (
+            {isCustomer ? (
               <div className="text-sm" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(reply.body) }} />
+            ) : (
+              <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
             )}
           </div>
         )
