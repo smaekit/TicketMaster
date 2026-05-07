@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
   const where = {
     status: params.status
       ? params.status
-      : { notIn: ['NEW', 'PROCESSING'] as const },
+      : { notIn: ['NEW', 'PROCESSING'] as ('NEW' | 'PROCESSING')[] },
     ...(params.category && { category: params.category }),
     ...(params.search && {
       OR: [
@@ -60,6 +60,45 @@ router.get('/agents', async (_req, res) => {
     orderBy: { name: 'asc' },
   })
   res.json(agents)
+})
+
+// GET /api/tickets/stats
+router.get('/stats', async (_req, res) => {
+  const [total, open, aiResolved, resolutionRows, dailyRows] = await Promise.all([
+    prisma.ticket.count(),
+    prisma.ticket.count({ where: { status: 'OPEN' } }),
+    prisma.ticket.count({ where: { autoResolved: true } }),
+    prisma.$queryRaw<[{ avg_ms: bigint | null }]>`
+      SELECT ROUND(AVG(EXTRACT(EPOCH FROM ("updatedAt" - "createdAt")) * 1000))::bigint AS avg_ms
+      FROM "Ticket"
+      WHERE status IN ('RESOLVED', 'CLOSED')
+    `,
+    prisma.$queryRaw<{ date: string; count: bigint }[]>`
+      WITH dates AS (
+        SELECT generate_series(
+          CURRENT_DATE - INTERVAL '29 days',
+          CURRENT_DATE,
+          INTERVAL '1 day'
+        )::date AS date
+      )
+      SELECT
+        dates.date::text,
+        COUNT(t.id)::bigint AS count
+      FROM dates
+      LEFT JOIN "Ticket" t ON DATE(t."createdAt") = dates.date
+      GROUP BY dates.date
+      ORDER BY dates.date ASC
+    `,
+  ])
+
+  res.json({
+    totalTickets: total,
+    openTickets: open,
+    aiResolvedTickets: aiResolved,
+    aiResolvedPercentage: total > 0 ? Math.round((aiResolved / total) * 1000) / 10 : 0,
+    avgResolutionMs: resolutionRows[0]?.avg_ms != null ? Number(resolutionRows[0].avg_ms) : null,
+    dailyTickets: dailyRows.map((r) => ({ date: r.date, count: Number(r.count) })),
+  })
 })
 
 // GET /api/tickets/:id
