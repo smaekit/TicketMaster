@@ -4,6 +4,7 @@ import { generateText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { requireAuth } from '../middleware/auth'
 import { prisma } from '../lib/prisma'
+import { sendEmailJob } from '../lib/email-worker'
 import { ticketQuerySchema, ticketUpdateSchema, createReplySchema, Role } from '@ticketmaster/shared'
 import { parseQuery, parseBody } from '../lib/validate'
 
@@ -154,7 +155,10 @@ router.post('/:id/replies', async (req, res) => {
   const data = parseBody(createReplySchema, req.body, res)
   if (!data) return
 
-  const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id }, select: { id: true } })
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, senderEmail: true, subject: true },
+  })
   if (!ticket) return void res.status(404).json({ message: 'Ticket not found' })
 
   const reply = await prisma.ticketReply.create({
@@ -166,7 +170,15 @@ router.post('/:id/replies', async (req, res) => {
     },
     include: { author: { select: { id: true, name: true } } },
   })
+
   res.status(201).json(reply)
+
+  await sendEmailJob({
+    to: ticket.senderEmail,
+    subject: ticket.subject,
+    replyBody: data.body,
+    idempotencyKey: `reply/${reply.id}`,
+  })
 })
 
 // POST /api/tickets/:id/polish-reply

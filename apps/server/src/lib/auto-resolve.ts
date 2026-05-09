@@ -5,13 +5,14 @@ import { openai } from '@ai-sdk/openai'
 import { Ticket } from '../../generated/prisma/client'
 import { prisma } from './prisma'
 import boss from './boss'
+import { sendEmailJob } from './email-worker'
 
 const QUEUE = 'auto-resolve-ticket'
 const CANNOT_RESOLVE = 'CANNOT_RESOLVE'
 
 const KB = readFileSync(join(__dirname, '..', '..', '..', '..', 'knowledge-base.md'), 'utf-8')
 
-type AutoResolveJobData = Pick<Ticket, 'id' | 'subject' | 'body' | 'senderName'>
+type AutoResolveJobData = Pick<Ticket, 'id' | 'subject' | 'body' | 'senderName' | 'senderEmail'>
 
 export async function sendAutoResolveJob(ticket: Ticket): Promise<void> {
   await boss.send(QUEUE, {
@@ -19,13 +20,14 @@ export async function sendAutoResolveJob(ticket: Ticket): Promise<void> {
     subject: ticket.subject,
     body: ticket.body,
     senderName: ticket.senderName,
+    senderEmail: ticket.senderEmail,
   })
 }
 
 export async function startAutoResolveWorker(): Promise<void> {
   await boss.createQueue(QUEUE)
   await boss.work<AutoResolveJobData>(QUEUE, async ([job]) => {
-    const { id, subject, body, senderName } = job.data
+    const { id, subject, body, senderName, senderEmail } = job.data
 
     await prisma.ticket.update({ where: { id }, data: { status: 'PROCESSING' } })
 
@@ -80,5 +82,12 @@ ${KB}`,
         data: { status: 'RESOLVED', autoResolved: true },
       }),
     ])
+
+    await sendEmailJob({
+      to: senderEmail,
+      subject,
+      replyBody: text.trim(),
+      idempotencyKey: `auto-resolve/${id}`,
+    })
   })
 }

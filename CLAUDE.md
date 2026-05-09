@@ -87,8 +87,8 @@ TicketMaster/
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS, React Router 7, shadcn/ui, TanStack Query, Axios |
 | AI | Claude API (`@anthropic-ai/sdk`) |
 | Job queue | pg-boss (PostgreSQL-backed) |
-| Email inbound | Mailgun webhook |
-| Email outbound | SendGrid |
+| Email inbound | Mailgun webhook (`/api/webhooks/mailgun`) |
+| Email outbound | Resend |
 | Deployment | Docker + Docker Compose |
 
 ## Dev Commands
@@ -114,7 +114,8 @@ Copy `.env.example` to `apps/server/.env` and fill in values:
 - `CLIENT_URL` — client base URL (e.g. `http://localhost:5173`)
 - `ANTHROPIC_API_KEY` — Claude API key
 - `MAILGUN_API_KEY` / `MAILGUN_SIGNING_KEY` / `MAILGUN_DOMAIN`
-- `SENDGRID_API_KEY` / `SENDGRID_FROM_EMAIL`
+- `MAILGUN_API_KEY` / `MAILGUN_SIGNING_KEY` / `MAILGUN_DOMAIN`
+- `RESEND_API_KEY` / `RESEND_FROM_EMAIL`
 
 ## User Management
 
