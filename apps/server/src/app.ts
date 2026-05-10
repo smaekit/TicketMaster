@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node'
 import express from 'express'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
@@ -31,5 +32,11 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use('/api', router)
+
+Sentry.setupExpressErrorHandler(app)
+
+app.use((_err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  res.status(500).json({ message: 'Internal server error' })
+})
 
 export default app

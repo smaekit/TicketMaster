@@ -19,6 +19,7 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
+    "@sentry/node": "^10.52.0",
     "@ticketmaster/shared": "workspace:*",
     "@types/multer": "^2.1.0",
     "ai": "^6.0.175",

@@ -1,3 +1,4 @@
+import './instrument'
 import app from './app'
 import boss from './lib/boss'
 import { startClassifyWorker } from './lib/classify'
