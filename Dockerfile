@@ -26,7 +26,7 @@ COPY --from=build-client /app/apps/client/dist ./apps/server/public
 RUN bun install
 
 WORKDIR /app/apps/server
-RUN bun /app/apps/server/node_modules/.bin/prisma generate
+RUN DATABASE_URL=postgresql://x:x@localhost/x bun /app/apps/server/node_modules/.bin/prisma generate
 
 EXPOSE 3000
 CMD ["sh", "-c", "bun /app/apps/server/node_modules/.bin/prisma migrate deploy && bun src/index.ts"]
