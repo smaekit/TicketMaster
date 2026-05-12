@@ -14,11 +14,11 @@ import { type Ticket } from './TicketDetailPage'
 
 type Agent = { id: string; name: string }
 
-const STATUS_LABELS: Record<TicketStatus, string> = {
+const STATUS_LABELS = {
   OPEN: 'Open',
   RESOLVED: 'Resolved',
   CLOSED: 'Closed',
-}
+} satisfies Partial<Record<TicketStatus, string>>
 
 const CATEGORY_LABELS: Record<TicketCategory, string> = {
   GENERAL_QUESTION: 'General Question',
@@ -74,7 +74,7 @@ export function UpdateTicket({ ticket }: { ticket: Ticket }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(Object.keys(STATUS_LABELS) as TicketStatus[]).map((s) => (
+              {(Object.keys(STATUS_LABELS) as (keyof typeof STATUS_LABELS)[]).map((s) => (
                 <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
               ))}
             </SelectContent>

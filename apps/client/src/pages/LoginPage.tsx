@@ -41,7 +41,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     await authClient.signIn.email(data, {
       onSuccess: () => navigate('/dashboard', { replace: true }),
-      onError: (ctx) =>
+      onError: (ctx: { error: { message?: string } }) =>
         setError('root', { message: ctx.error.message ?? 'Login failed' }),
     })
   }

@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/node'
 import express from 'express'
 import cors from 'cors'
+import path from 'path'
 import rateLimit from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 import { auth } from './lib/auth'
@@ -31,7 +32,14 @@ app.all('/api/auth/*splat', toNodeHandler(auth))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
+
 app.use('/api', router)
+
+app.use(express.static(path.join(__dirname, '../public')))
+app.get('/{*path}', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'))
+})
 
 Sentry.setupExpressErrorHandler(app)
 
