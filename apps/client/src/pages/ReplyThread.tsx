@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify'
+import { sanitizeEmailHtml } from '@/lib/utils'
 
 export type TicketReply = {
   id: string
@@ -39,7 +39,7 @@ export function ReplyThread({ replies }: Props) {
               </span>
             </div>
             {isCustomer ? (
-              <div className="text-sm" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(reply.body) }} />
+              <div className="text-sm text-foreground" dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(reply.body) }} />
             ) : (
               <p className="text-sm whitespace-pre-wrap">{reply.body}</p>
             )}

@@ -1,5 +1,5 @@
-import DOMPurify from 'dompurify'
 import { type TicketStatus, type TicketCategory } from '@ticketmaster/shared'
+import { sanitizeEmailHtml } from '@/lib/utils'
 import { type Ticket } from './TicketDetailPage'
 import { TicketSummary } from './TicketSummary'
 
@@ -32,17 +32,6 @@ const CATEGORY_LABELS: Record<TicketCategory, string> = {
   TECHNICAL_QUESTION: 'Technical Question',
   REFUND_REQUEST: 'Refund Request',
   UNCATEGORIZED: 'Uncategorized',
-}
-
-function sanitizeEmailHtml(html: string): string {
-  const clean = DOMPurify.sanitize(html)
-  const doc = new DOMParser().parseFromString(clean, 'text/html')
-  doc.querySelectorAll<HTMLElement>('[style]').forEach((el) => {
-    el.style.removeProperty('color')
-    el.style.removeProperty('background-color')
-    el.style.removeProperty('background')
-  })
-  return doc.body.innerHTML
 }
 
 export function TicketDetail({ ticket }: { ticket: Ticket }) {
