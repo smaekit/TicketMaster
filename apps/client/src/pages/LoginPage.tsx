@@ -6,12 +6,6 @@ import { authClient } from '../lib/authClient'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 
 const schema = z.object({
   email: z.string().email('Invalid email address'),
@@ -19,6 +13,14 @@ const schema = z.object({
 })
 
 type LoginFormData = z.infer<typeof schema>
+
+function DiamondIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 14 14" className={className} fill="currentColor">
+      <path d="M7 1.5 L12.5 7 L7 12.5 L1.5 7 Z" />
+    </svg>
+  )
+}
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -45,18 +47,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign in</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-5 shadow-lg">
+            <DiamondIcon className="w-7 h-7 text-primary-foreground" />
+          </div>
+          <h1
+            className="text-2xl font-semibold text-foreground tracking-tight"
+            style={{ fontFamily: 'Outfit, sans-serif' }}
+          >
+            TicketMaster
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1.5">Sign in to your workspace</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border shadow-sm p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="text"
+                autoComplete="email"
                 {...register('email')}
                 aria-invalid={!!errors.email}
               />
@@ -69,6 +82,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 {...register('password')}
                 aria-invalid={!!errors.password}
               />
@@ -79,12 +93,12 @@ export default function LoginPage() {
             {errors.root && (
               <p className="text-sm text-destructive">{errors.root.message}</p>
             )}
-            <Button type="submit" disabled={isSubmitting} className="w-full">
+            <Button type="submit" disabled={isSubmitting} className="w-full mt-2">
               {isSubmitting ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

@@ -3,12 +3,20 @@ import { type TicketStatus, type TicketCategory } from '@ticketmaster/shared'
 import { type Ticket } from './TicketDetailPage'
 import { TicketSummary } from './TicketSummary'
 
+const STATUS_DOT: Record<TicketStatus, string> = {
+  NEW: 'bg-amber-400',
+  PROCESSING: 'bg-orange-400',
+  OPEN: 'bg-sky-400',
+  RESOLVED: 'bg-emerald-500',
+  CLOSED: 'bg-gray-400',
+}
+
 const STATUS_STYLES: Record<TicketStatus, string> = {
-  NEW: 'bg-yellow-100 text-yellow-700',
-  PROCESSING: 'bg-orange-100 text-orange-700',
-  OPEN: 'bg-blue-100 text-blue-700',
-  RESOLVED: 'bg-green-100 text-green-700',
-  CLOSED: 'bg-gray-100 text-gray-600',
+  NEW: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200',
+  PROCESSING: 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-200',
+  OPEN: 'bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-200',
+  RESOLVED: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200',
+  CLOSED: 'bg-gray-50 text-gray-600 ring-1 ring-inset ring-gray-200',
 }
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
@@ -33,7 +41,8 @@ export function TicketDetail({ ticket }: { ticket: Ticket }) {
     <>
       <div>
         <div className="flex items-center gap-2 mb-2">
-          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${STATUS_STYLES[status]}`}>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}>
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${STATUS_DOT[status]}`} />
             {STATUS_LABELS[status]}
           </span>
           <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[category]}</span>

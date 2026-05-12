@@ -10,7 +10,7 @@ import UsersPage from './pages/UsersPage'
 
 function Layout() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <Outlet />
     </div>

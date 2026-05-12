@@ -1,51 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 40 15% 96%;
+    --foreground: 220 22% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 220 22% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    --popover-foreground: 220 22% 12%;
+    --primary: 142 76% 29%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --secondary: 40 12% 92%;
+    --secondary-foreground: 220 22% 12%;
+    --muted: 40 10% 91%;
+    --muted-foreground: 220 8% 46%;
+    --accent: 142 30% 93%;
+    --accent-foreground: 142 76% 22%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --radius: 0.5rem;
+    --border: 40 10% 87%;
+    --input: 40 10% 89%;
+    --ring: 142 76% 29%;
+    --radius: 0.625rem;
   }
 
+  /* ── Mission Control dark mode ── */
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 215 26% 7%;
+    --foreground: 210 20% 92%;
+    --card: 215 18% 11%;
+    --card-foreground: 210 20% 92%;
+    --popover: 215 18% 11%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 189 100% 50%;
+    --primary-foreground: 215 26% 7%;
+    --secondary: 215 14% 16%;
+    --secondary-foreground: 210 20% 88%;
+    --muted: 215 14% 16%;
+    --muted-foreground: 215 10% 58%;
+    --accent: 189 40% 14%;
+    --accent-foreground: 189 100% 65%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 215 10% 22%;
+    --input: 215 10% 18%;
+    --ring: 189 100% 50%;
   }
 }
 
@@ -53,9 +56,41 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+
+  /* Mission Control: dot-grid atmosphere + monospace headings */
+  .dark body {
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      hsl(189 100% 50% / 0.06) 1px,
+      transparent 0
+    );
+    background-size: 28px 28px;
+  }
+
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4 {
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.03em;
+  }
+
+  /* Cyan ring glow on focused inputs in dark mode */
+  .dark input:focus-visible,
+  .dark textarea:focus-visible,
+  .dark select:focus-visible {
+    box-shadow: 0 0 0 1px hsl(var(--ring)), 0 0 10px hsl(189 100% 50% / 0.25);
+  }
+
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {

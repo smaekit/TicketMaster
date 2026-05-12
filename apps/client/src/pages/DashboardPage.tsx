@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import api from '@/lib/api'
+import { authClient } from '@/lib/authClient'
 
 type DailyCount = { date: string; count: number }
 
@@ -41,14 +42,31 @@ function formatChartDate(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function StatCard({ title, value, sub }: { title: string; value: string; sub?: string }) {
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+function StatCard({
+  title,
+  value,
+  sub,
+  accent,
+}: {
+  title: string
+  value: string
+  sub?: string
+  accent?: boolean
+}) {
   return (
-    <Card>
+    <Card className={accent ? 'border-l-4 border-l-primary' : ''}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-3xl font-bold">{value}</p>
+        <p className="text-3xl font-semibold text-foreground">{value}</p>
         {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
       </CardContent>
     </Card>
@@ -69,6 +87,7 @@ function StatCardSkeleton() {
 }
 
 export default function DashboardPage() {
+  const { data: session } = authClient.useSession()
   const { data, isLoading, isError } = useQuery<TicketStats>({
     queryKey: ['ticket-stats'],
     queryFn: () => api.get('/tickets/stats').then((r) => r.data),
@@ -79,9 +98,16 @@ export default function DashboardPage() {
     Tickets: d.count,
   }))
 
+  const firstName = session?.user.name?.split(' ')[0] ?? ''
+
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <div className="mb-7">
+        <h1 className="text-2xl font-semibold text-foreground">
+          {getGreeting()}{firstName ? `, ${firstName}` : ''}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">Here's what's happening with your tickets.</p>
+      </div>
 
       {isError && (
         <p className="text-destructive text-sm mb-4">Failed to load stats. Please try again.</p>
@@ -93,7 +119,11 @@ export default function DashboardPage() {
         ) : data ? (
           <>
             <StatCard title="Total Tickets" value={data.totalTickets.toLocaleString()} />
-            <StatCard title="Open Tickets" value={data.openTickets.toLocaleString()} />
+            <StatCard
+              title="Open Tickets"
+              value={data.openTickets.toLocaleString()}
+              accent={data.openTickets > 0}
+            />
             <StatCard title="Resolved by AI" value={data.aiResolvedTickets.toLocaleString()} />
             <StatCard
               title="AI Resolution Rate"
@@ -103,7 +133,7 @@ export default function DashboardPage() {
             <StatCard
               title="Avg Resolution Time"
               value={formatDuration(data.avgResolutionMs)}
-              sub="resolved & closed tickets, creation to last update"
+              sub="resolved & closed tickets"
             />
           </>
         ) : null}
@@ -122,14 +152,14 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                   tickLine={false}
                   axisLine={false}
                   interval={4}
                 />
                 <YAxis
                   allowDecimals={false}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                   tickLine={false}
                   axisLine={false}
                 />
@@ -138,11 +168,13 @@ export default function DashboardPage() {
                   contentStyle={{
                     background: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     fontSize: '12px',
+                    fontFamily: 'Inter, sans-serif',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                   }}
                 />
-                <Bar dataKey="Tickets" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Tickets" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : null}
