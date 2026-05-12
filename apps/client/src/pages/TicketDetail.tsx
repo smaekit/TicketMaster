@@ -34,6 +34,17 @@ const CATEGORY_LABELS: Record<TicketCategory, string> = {
   UNCATEGORIZED: 'Uncategorized',
 }
 
+function sanitizeEmailHtml(html: string): string {
+  const clean = DOMPurify.sanitize(html)
+  const doc = new DOMParser().parseFromString(clean, 'text/html')
+  doc.querySelectorAll<HTMLElement>('[style]').forEach((el) => {
+    el.style.removeProperty('color')
+    el.style.removeProperty('background-color')
+    el.style.removeProperty('background')
+  })
+  return doc.body.innerHTML
+}
+
 export function TicketDetail({ ticket }: { ticket: Ticket }) {
   const { senderEmail, senderName, subject, body, status, category, aiReply, createdAt, updatedAt } = ticket
 
@@ -59,8 +70,8 @@ export function TicketDetail({ ticket }: { ticket: Ticket }) {
       <div className="rounded-md border bg-card p-4">
         <p className="text-sm font-medium text-muted-foreground mb-2">Message</p>
         <div
-          className="text-sm"
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }}
+          className="text-sm text-foreground"
+          dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(body) }}
         />
       </div>
 
